@@ -66,7 +66,26 @@ Install Python 3.
 
 ## Usage ##
 
+Minimize Pick using bisimulation:
+
 ```
 python -m scripts.pick_bisimulation
-...
+```
+
+Minimize Redundant Pick using bisimulation:
+
+```
+python -m scripts.redundant_pick_bisimulation
+```
+
+Minimize Pick using MDP homomorphism:
+
+```
+python -m scripts.pick_homomorphism
+```
+
+Minimize Redundant Pick using homomorphism:
+
+```
+python -m scripts.redundant_pick_homomorphism
 ```
