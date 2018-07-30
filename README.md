@@ -48,7 +48,8 @@ state partition = {{1, 11}, {2, 12}, {3, 13}, {4, 14}, {5}}
 ### Homomorphism
 
 MDP homomorphism [(Ravindran 2014)](https://dl.acm.org/citation.cfm?id=1023021) is more lenient than bisimulation
-because two states can be equivalent even if they do not behave the same given some action.
+because two states can be equivalent even if they do not behave the same given some action, but we need to find
+a mapping between actions of equivalent states.
 
 **Pick:**
 
@@ -58,7 +59,7 @@ state partition = {{1, 2, 3, 4}, {5}}
 
 **Redundant Pick:**
 
-state partition: {{1, 2, 3, 4, 11, 12, 13, 14}, {5}}
+state partition = {{1, 2, 3, 4, 11, 12, 13, 14}, {5}}
 
 ## Setup ##
  
