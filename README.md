@@ -25,9 +25,13 @@ that behave in the same way as states 1, 2, 3 and 4.
 
 **Pick:**
 
+Bisimulation partitions each state separately:
+
 state partition = {{1}, {2}, {3}, {4}, {5}}
 
 **Redundant Pick:**
+
+Bisimulation does not offer much help with abstracting states, but it can find redundant states:
 
 state partition = {{1, 11}, {2, 12}, {3, 13}, {4, 14}, {5}}
 
@@ -35,6 +39,8 @@ state partition = {{1, 11}, {2, 12}, {3, 13}, {4, 14}, {5}}
 ### Homomorphism
 
 **Pick:**
+
+Homomorphism correctly partitions the state space:
 
 state partition = {{1, 2, 3, 4}, {5}}
 
