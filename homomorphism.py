@@ -2,6 +2,15 @@ import copy as cp
 
 
 def split(block, states, partition, mdp):
+    """
+    Split a state-action block so that all state-actions in the smaller blocks have the same reward and the
+    same probability of transitioning into a set of states given by the states argument.
+    :param block:           A block to split.
+    :param states:          A set of states for comparison of transition probabilities.
+    :param partition:       A partition to modify.
+    :param mdp:             An MDP.
+    :return:                A modified partition.
+    """
 
     partition = cp.deepcopy(partition)
     partition.remove(block)
@@ -25,9 +34,14 @@ def split(block, states, partition, mdp):
 
 
 def get_state_partition(state_action_partition):
+    """
+    Get a state partition induced by state-action partition.
+    :param state_action_partition:      A state-action partition.
+    :return:                            A state partition.
+    """
 
     reversed_state_partition = {}
-    ids = {block: idx for idx, block in enumerate(state_action_partition )}
+    ids = {block: idx for idx, block in enumerate(state_action_partition)}
 
     for block in state_action_partition:
 
@@ -54,6 +68,12 @@ def get_state_partition(state_action_partition):
 
 
 def partition_improvement(partition, mdp):
+    """
+    Perform one step of partition improvement.
+    :param partition:       A partition.
+    :param mdp:             An MDP.
+    :return:                The same or a finer partition.
+    """
 
     new_partition = cp.deepcopy(partition)
     state_partition = get_state_partition(new_partition)
@@ -81,6 +101,11 @@ def partition_improvement(partition, mdp):
 
 
 def partition_iteration(mdp):
+    """
+    Iterate partition improvement until a fixed point is reached.
+    :param mdp:         An MDP.
+    :return:            The coarses state-action partition that is homomorphic to the original MDP.
+    """
 
     all_pairs = []
     for state in mdp.STATES:

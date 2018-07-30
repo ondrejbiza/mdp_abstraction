@@ -1,5 +1,5 @@
 STATES = [1, 2, 3, 4, 5, 11, 12, 13, 14]
-INITIAL_STATES = [1, 2, 3, 4]
+INITIAL_STATES = [1, 2, 3, 4, 11, 12, 13, 14]
 GOAL_STATE = 5
 ACTIONS = [1, 2, 3, 4]
 
