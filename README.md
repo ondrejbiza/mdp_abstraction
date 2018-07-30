@@ -23,6 +23,9 @@ that behave in the same way as states 1, 2, 3 and 4.
 
 ### Bisimulation ###
 
+Bisimulation [(Givan 2012)](https://www.sciencedirect.com/science/article/pii/S0004370202003764) considers two states 
+to be equal if they, roughly speaking, behave the same given an arbitrary actions.
+
 **Pick:**
 
 Bisimulation partitions each state separately:
@@ -37,6 +40,10 @@ state partition = {{1, 11}, {2, 12}, {3, 13}, {4, 14}, {5}}
 
 
 ### Homomorphism
+
+MDP homomorphism [(Ravindran 2014)](https://dl.acm.org/citation.cfm?id=1023021) can be used to map
+both states and actions to an abstract MDP. Therefore, two states can be equal even if they do not behave
+the same under some action.
 
 **Pick:**
 
