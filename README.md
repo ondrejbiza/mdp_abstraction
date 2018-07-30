@@ -1,4 +1,4 @@
-# MDP Abstraction #
+# MDP Minimization #
 
 This repository contains algorithms for minimizing Markove Decision Processes (MDP)
 given a fully-specified deterministic MDP as an input. The minimal MDP and the original
@@ -30,7 +30,7 @@ that behave in the same way as states 1, 2, 3 and 4.
 ### Bisimulation ###
 
 Bisimulation [(Givan 2012)](https://www.sciencedirect.com/science/article/pii/S0004370202003764) considers two states 
-to be equal if they, roughly speaking, behave the same given an arbitrary action.
+to be equivalent if they, roughly speaking, behave the same given an arbitrary action.
 
 **Pick:**
 
