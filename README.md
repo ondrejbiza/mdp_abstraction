@@ -38,6 +38,10 @@ state partition = {{1, 11}, {2, 12}, {3, 13}, {4, 14}, {5}}
 
 state partition = {{1, 2, 3, 4}, {5}}
 
+**Redundant Pick:**
+
+state partition: {{1, 2, 3, 4, 11, 12, 13, 14}, {5}}
+
 ## Setup ##
  
 Install Python 3.
