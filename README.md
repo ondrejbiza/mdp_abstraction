@@ -1,6 +1,12 @@
 # MDP Abstraction #
 
+This repository contains algorithms for minimizing Markove Decision Processes (MDP)
+given a fully-specified deterministic MDP as an input. The minimal MDP and the original
+MDP can be equivalent either under the notion of **bisimulation** or **MDP homomorphism**.
+
 ## Environments ##
+
+Two example environments are included.
 
 ### Pick ###
 
@@ -19,7 +25,7 @@ that behave in the same way as states 1, 2, 3 and 4.
 
 ![ab](images/redundant_pick_env.png)
 
-## Abstraction ##
+## Minimization ##
 
 ### Bisimulation ###
 
@@ -28,7 +34,7 @@ to be equal if they, roughly speaking, behave the same given an arbitrary action
 
 **Pick:**
 
-Bisimulation partitions each state separately:
+Bisimulation partitions each state separately, the Pick environment is already minimal.
 
 state partition = {{1}, {2}, {3}, {4}, {5}}
 
@@ -42,11 +48,11 @@ state partition = {{1, 11}, {2, 12}, {3, 13}, {4, 14}, {5}}
 ### Homomorphism
 
 MDP homomorphism [(Ravindran 2014)](https://dl.acm.org/citation.cfm?id=1023021) is more lenient than bisimulation
-because two states can be equal even if they do not behave the same given some action.
+because two states can be equivalent even if they do not behave the same given some action.
 
 **Pick:**
 
-Homomorphism correctly partitions the state space:
+Homomorphism partitions the state space in a more useful way:
 
 state partition = {{1, 2, 3, 4}, {5}}
 
