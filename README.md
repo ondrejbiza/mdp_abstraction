@@ -61,32 +61,32 @@ state partition = {{1, 2, 3, 4}, {5}}
 
 state partition = {{1, 2, 3, 4, 11, 12, 13, 14}, {5}}
 
+### Iterative Homomorphism
+
+There are cases when we want to construct the minimal MDP even if we do not have
+a full specification of the environment. To test this, I started with an empty MDP
+and iteratively added new entries to the transition function (P) and the reward function (R)
+until I got the original MDP. At each step, I ran the homomorphism algorithm on the 
+partial MDP.
+
+Find the results in _results/pick_homomorphism_iterative.txt_.
+
 ## Setup ##
  
 Install Python 3.
 
 ## Usage ##
 
-Minimize Pick using bisimulation:
-
 ```
+# Minimize Pick using bisimulation
 python -m scripts.pick_bisimulation
-```
 
-Minimize Redundant Pick using bisimulation:
-
-```
+# Minimize Redundant Pick using bisimulatio
 python -m scripts.redundant_pick_bisimulation
-```
 
-Minimize Pick using MDP homomorphism:
-
-```
+# Minimize Pick using MDP homomorphism
 python -m scripts.pick_homomorphism
-```
 
-Minimize Redundant Pick using homomorphism:
-
-```
+# Minimize Redundant Pick using homomorphism
 python -m scripts.redundant_pick_homomorphism
 ```

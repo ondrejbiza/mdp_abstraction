@@ -107,10 +107,7 @@ def partition_iteration(mdp):
     :return:            The coarses state-action partition that is homomorphic to the original MDP.
     """
 
-    all_pairs = []
-    for state in mdp.STATES:
-        for action in mdp.ACTIONS:
-            all_pairs.append((state, action))
+    all_pairs = mdp.P.keys()
 
     partition = {frozenset(all_pairs)}
     new_partition = partition_improvement(partition, mdp)
