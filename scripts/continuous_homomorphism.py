@@ -1,4 +1,5 @@
 import numpy as np
+import sklearn
 import matplotlib.pyplot as plt
 import envs.continuous as env
 
@@ -18,18 +19,21 @@ def gather_experience(num):
     return transitions
 
 
-experience = gather_experience(100)
-points = [[state, action] for state, action, _, _ in experience]
-points = np.array(points, dtype=np.float32)
+def plot_experience(experience):
 
-x = []
-for i in np.linspace(0, 5.99, num=100):
-  for j in np.linspace(0, 6.99, num=100):
-    x.append([i, j])
+    points = [[state, action] for state, action, _, _ in experience]
+    points = np.array(points, dtype=np.float32)
 
-x = np.array(x)
-y = np.array([env.get_block(p[0], p[1]) for p in x])
+    x = []
+    for i in np.linspace(0, 5.99, num=100):
+        for j in np.linspace(0, 6.99, num=100):
+            x.append([i, j])
 
-plt.scatter(x[:, 0], x[:, 1], c=y, marker="s")
-plt.scatter(points[:, 0], points[:, 1])
-plt.show()
+    x = np.array(x)
+    y = np.array([env.get_block(p[0], p[1]) for p in x])
+
+    plt.scatter(x[:, 0], x[:, 1], c=y, marker="s")
+    plt.scatter(points[:, 0], points[:, 1])
+    plt.show()
+
+
