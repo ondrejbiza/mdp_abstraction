@@ -4,13 +4,11 @@ import numpy as np
 class ContinuousEnv1:
 
     STATE_ACTION_MAP = np.array([
-        [1, 1, 1, 1],
-        [1, 1, 1, 1],
-        [0, 0, 1, 1],
-        [0, 0, 1, 1]
+        [1, 1],
+        [0, 1]
     ], dtype=np.int32)
 
-    STATE_MAP = np.array([0, 0, 1, 1], dtype=np.int32)
+    STATE_MAP = np.array([0,1], dtype=np.int32)
 
     P = {
         0: 1,
@@ -34,7 +32,11 @@ class ContinuousEnv1:
     def step(self, action):
 
         state_action_block = self.get_state_action_block(self.state, action)
-        return self.R[state_action_block], self.P[state_action_block]
+        next_state_block = self.P[state_action_block]
+        next_state = np.random.uniform(next_state_block, next_state_block + 1)
+        self.state =next_state
+
+        return self.R[state_action_block], next_state
 
     def get_state_action_block(self, state, action):
 

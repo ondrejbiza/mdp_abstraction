@@ -71,7 +71,7 @@ def induce_state_partition(state_action_partition, d, k):
         for j, state_2 in enumerate(states):
             if j > i:
                 break
-            dist_matrix[i, j] = np.sum(np.abs(state_1 - state_2))
+            dist_matrix[i, j] = d(state_1, state_2)
 
     state_partition = {}
 
@@ -107,7 +107,7 @@ def train_f(state_partition, f):
     f.fit(x, y)
 
 
-def partition_improvement(partition, mdp, f, d):
+def partition_improvement(partition, mdp, f, d, k):
     """
     Perform one step of partition improvement.
     :param partition:       A partition.
@@ -137,10 +137,13 @@ def partition_improvement(partition, mdp, f, d):
                     flag = True
                     break
 
+    induced_state_partition = induce_state_partition(new_partition, d, k)
+    train_f(induced_state_partition, f)
+
     return new_partition
 
 
-def partition_iteration(mdp, f, d):
+def partition_iteration(mdp, f, d, k):
     """
     Iterate partition improvement until a fixed point is reached.
     :param mdp:         An MDP.
@@ -150,11 +153,11 @@ def partition_iteration(mdp, f, d):
     all_pairs = mdp.P.keys()
 
     partition = {frozenset(all_pairs)}
-    new_partition = partition_improvement(partition, mdp, f, d)
+    new_partition = partition_improvement(partition, mdp, f, d, k)
 
     while partition != new_partition:
 
         partition = new_partition
-        new_partition = partition_improvement(partition, mdp, f, d)
+        new_partition = partition_improvement(partition, mdp, f, d, k)
 
     return new_partition

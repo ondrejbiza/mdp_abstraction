@@ -14,4 +14,4 @@ class TestContinuous1(unittest.TestCase):
             for _ in range(5):
 
                 env.reset()
-                env.step(np.random.uniform(0, 4))
+                env.step(np.random.uniform(0, 2))
