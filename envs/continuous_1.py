@@ -27,7 +27,7 @@ class ContinuousEnv1:
 
     def reset(self):
 
-        self.state = np.random.uniform(0, 2)
+        self.state = np.random.uniform(0, 1)
 
     def step(self, action):
 

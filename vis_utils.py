@@ -11,8 +11,8 @@ def plot_background(env, show=True):
     """
 
     x = []
-    for i in np.linspace(0, env.STATE_ACTION_MAP.shape[0] - 0.01, num=50):
-        for j in np.linspace(0, env.STATE_ACTION_MAP.shape[1] - 0.01, num=50):
+    for i in np.linspace(0, env.STATE_ACTION_MAP.shape[1] - 0.01, num=50):
+        for j in np.linspace(0, env.STATE_ACTION_MAP.shape[0] - 0.01, num=50):
             x.append([i, j])
 
     x = np.array(x)
@@ -37,6 +37,18 @@ def plot_state_action_partition(state_action_partition, show=True):
         for idx, t in enumerate(block):
             x[idx, 0] = t[0]
             x[idx, 1] = t[1]
+        plt.scatter(x[:, 0], x[:, 1])
+
+    if show:
+        plt.show()
+
+
+def plot_state_partition(state_partition, show=True):
+
+    for block in state_partition:
+        x = np.ones((len(block), 2))
+        for idx, state in enumerate(block):
+            x[idx, 0] = state
         plt.scatter(x[:, 0], x[:, 1])
 
     if show:

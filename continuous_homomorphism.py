@@ -1,9 +1,8 @@
-import random
 import copy as cp
 import numpy as np
 
 
-def split(state_action_block, state_block, partition, classifier):
+def split(state_action_block, state_block, partition):
 
     partition = cp.deepcopy(partition)
     partition.remove(state_action_block)
@@ -11,8 +10,7 @@ def split(state_action_block, state_block, partition, classifier):
     new_blocks = {}
     for state, action, reward, next_state, done in state_action_block:
 
-        next_state_block = classifier.predict(next_state)
-        key = (reward, next_state_block == state_block)
+        key = (reward, next_state == state_block)
 
         if key not in new_blocks.keys():
             new_blocks[key] = []
@@ -76,57 +74,10 @@ def induce_state_partition(state_action_partition, distance, k):
     return state_partition
 
 
-def get_state_partition(state_action_partition, classifier):
-
-    # get all states
-    states = set()
-
-    for state_action_block in state_action_partition:
-
-        for state, action, reward, next_state, done in state_action_block:
-
-            states.add(state)
-
-            if done:
-                states.add(next_state)
-
-    # sort states into partitions
-    state_partition = {}
-
-    for state in states:
-
-        state_block = classifier.predict(state)
-
-        if state_block not in state_partition:
-            state_partition[state_block] = []
-
-        state_partition[state_block].append(state)
-
-    state_partition = {frozenset(value) for value in state_partition.values()}
-
-    return state_partition
-
-
-def train_f(state_partition, f):
-
-    x = []
-    y = []
-
-    for idx, block in enumerate(state_partition):
-        for state in block:
-            x.append(state)
-            y.append(idx)
-
-    x = np.array(x, dtype=np.float32)
-    y = np.array(y, dtype=np.int32)
-
-    f.fit(x, y)
-
-
-def partition_improvement(partition, classifier, distance, k):
+def partition_improvement(partition, distance, k):
 
     new_partition = cp.deepcopy(partition)
-    state_partition = get_state_partition(new_partition, classifier)
+    state_partition = induce_state_partition(new_partition, distance, k)
 
     for state_block in state_partition:
 
@@ -138,7 +89,7 @@ def partition_improvement(partition, classifier, distance, k):
 
             for new_block in new_partition:
 
-                tmp_new_partition = split(new_block, state_block, new_partition, classifier)
+                tmp_new_partition = split(new_block, state_block, new_partition)
 
                 if new_partition != tmp_new_partition:
 
@@ -147,68 +98,37 @@ def partition_improvement(partition, classifier, distance, k):
                     flag = True
                     break
 
-    induced_state_partition = induce_state_partition(new_partition, distance, k)
-    train_f(induced_state_partition, classifier)
-
     return new_partition
 
 
-def partition_iteration(partition, classifier, distance, k, max_steps=50):
+def partition_iteration(partition, distance, k, max_steps=50):
 
-    new_partition = partition_improvement(partition, classifier, distance, k)
+    new_partition = partition_improvement(partition, distance, k)
     step = 0
 
     while partition != new_partition and step < max_steps:
 
         partition = new_partition
-        new_partition = partition_improvement(partition, classifier, distance, k)
+        new_partition = partition_improvement(partition, distance, k)
 
         step += 1
 
     return new_partition
 
 
-def add_new_experience(state_action_partition, experience, classifier):
+def get_experience(state_action_partition):
 
-    d = {}
-
-    for block in state_action_partition:
-        sample = random.sample(block, 1)[0]
-        key = (sample[2], classifier.predict(sample[3]))
-        if key not in d:
-            d[key] = []
-        d[key] += block
-
-    for state, action, reward, next_state, done in experience:
-        key = (reward, classifier.predict(next_state))
-        if key not in d:
-            d[key] = []
-        d[key].append((state, action, reward, next_state, done))
-
-    new_state_action_partition = {frozenset(value) for value in d.values()}
-
-    return new_state_action_partition
-
-
-def reclassify_partition(state_action_partition, classifier):
-
-    d = {}
+    experience = []
 
     for block in state_action_partition:
+        for t in block:
+            experience.append(t)
 
-        for state, action, reward, next_state, done in block:
-
-            key = (reward, classifier.predict(next_state))
-            if key not in d:
-                d[key] = []
-            d[key].append((state, action, reward, next_state, done))
-
-    new_state_action_partition = {frozenset(value) for value in d.values()}
-
-    return new_state_action_partition
+    return experience
 
 
-def full_partition_iteration(gather_experience, classifier, distance, k, num_steps, reclassify=False):
+def full_partition_iteration(gather_experience, distance, k, num_steps,
+                             visualize_state_action_partition=None, visualize_state_partition=None):
 
     state_action_partition = set()
 
@@ -218,21 +138,27 @@ def full_partition_iteration(gather_experience, classifier, distance, k, num_ste
         experience = gather_experience()
 
         # add experience
-        if len(state_action_partition) == 0:
+        experience += get_experience(state_action_partition)
+        state_action_partition = {frozenset(experience)}
 
-            state_action_partition = {frozenset(experience)}
-
-        else:
-
-            if reclassify:
-                state_action_partition.add(frozenset(experience))
-                state_action_partition = reclassify_partition(state_action_partition, classifier)
-            else:
-                state_action_partition  = add_new_experience(state_action_partition, experience, classifier)
+        # visualize added experience
+        if visualize_state_action_partition is not None:
+            print("experience added")
+            visualize_state_action_partition(state_action_partition)
 
         # rearrange partition
-        state_action_partition = partition_iteration(state_action_partition, classifier, distance, k)
+        state_action_partition = partition_iteration(state_action_partition, distance, k)
 
-    state_partition = get_state_partition(state_action_partition, classifier)
+        # visualize rearranged partition
+        if visualize_state_action_partition is not None:
+            visualize_state_action_partition(state_action_partition)
+
+        # visualize state partition
+        if visualize_state_partition is not None:
+            state_partition = induce_state_partition(state_action_partition, distance, k)
+            print("partition refined")
+            visualize_state_partition(state_partition)
+
+    state_partition = induce_state_partition(state_action_partition, distance, k)
 
     return state_action_partition, state_partition

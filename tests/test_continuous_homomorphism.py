@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-import continuous_homomorphism
+import continuous_homomorphism_with_f
 
 
 class MockClassifier:
@@ -29,10 +29,10 @@ class TestContinuousHomomorphism(unittest.TestCase):
         state_block = 1
         classifier = MockClassifier({0: 0, 1: 1})
 
-        new_partition = continuous_homomorphism.split(state_action_block, state_block, partition, classifier)
-        self.assertIn({(0, 0, 0, 0)}, new_partition)
-        self.assertIn({(1, 0, 1, 0), (2, 0, 1, 0)}, new_partition)
-        self.assertIn({(3, 0, 1, 1)}, new_partition)
+        new_partition = continuous_homomorphism_with_f.split(state_action_block, state_block, partition, classifier)
+        self.assertIn({(0, 0, 0, 0, False)}, new_partition)
+        self.assertIn({(1, 0, 1, 0, False), (2, 0, 1, 0, False)}, new_partition)
+        self.assertIn({(3, 0, 1, 1, False)}, new_partition)
 
     def test_induce_state_action_partition(self):
 
@@ -43,7 +43,7 @@ class TestContinuousHomomorphism(unittest.TestCase):
 
         state_action_parition = {block_1, block_2, block_3, block_4}
 
-        state_partition = continuous_homomorphism.induce_state_partition(state_action_parition, manhattan_distance, 2)
+        state_partition = continuous_homomorphism_with_f.induce_state_partition(state_action_parition, manhattan_distance, 2)
         self.assertIn({0.9, 1.1}, state_partition)
         self.assertIn({1.8, 2.2}, state_partition)
 
@@ -53,6 +53,6 @@ class TestContinuousHomomorphism(unittest.TestCase):
                                         (3, 0, 1, 1, False)])
         classifier = MockClassifier({0: 0, 1: 0, 2: 0, 3: 1})
 
-        state_partition = continuous_homomorphism.get_state_partition({state_action_block}, classifier)
+        state_partition = continuous_homomorphism_with_f.get_state_partition({state_action_block}, classifier)
         self.assertIn({0, 1, 2}, state_partition)
         self.assertIn({3}, state_partition)
