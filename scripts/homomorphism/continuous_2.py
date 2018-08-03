@@ -29,14 +29,12 @@ def gather_experience(env, num):
 
 def visualize_state_action_partition(state_action_partition):
 
-    print("num state-action blocks:", len(state_action_partition))
     vis_utils.plot_background(env, show=False)
     vis_utils.plot_state_action_partition(state_action_partition, show=True)
 
 
 def visualize_state_partition(state_partition):
 
-    print("num state blocks:", len(state_partition))
     vis_utils.plot_background(env, show=False)
     vis_utils.plot_state_partition(state_partition, show=True)
 
@@ -49,7 +47,7 @@ f = model_utils.CustomLogisticRegression()
 
 
 state_action_partition, state_partition = continuous_homomorphism.full_partition_iteration(
-    lambda: gather_experience(env, 200), d, k, 5,
+    lambda: gather_experience(env, 400), d, k, 1,
     visualize_state_action_partition=visualize_state_action_partition,
     visualize_state_partition=visualize_state_partition
 )
