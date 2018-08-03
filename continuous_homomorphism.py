@@ -173,7 +173,7 @@ def add_new_experience(state_action_partition, experience, classifier):
     d = {}
 
     for block in state_action_partition:
-        sample = random.sample(block, 1)
+        sample = random.sample(block, 1)[0]
         key = (sample[2], classifier.predict(sample[3]))
         if key not in d:
             d[key] = []
