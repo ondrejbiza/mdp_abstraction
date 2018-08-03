@@ -34,9 +34,9 @@ class ContinuousEnv1:
         state_action_block = self.get_state_action_block(self.state, action)
         next_state_block = self.P[state_action_block]
         next_state = np.random.uniform(next_state_block, next_state_block + 1)
-        self.state =next_state
+        self.state = next_state
 
-        return self.R[state_action_block], next_state
+        return self.R[state_action_block], next_state, False
 
     def get_state_action_block(self, state, action):
 
