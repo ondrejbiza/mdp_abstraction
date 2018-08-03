@@ -44,6 +44,8 @@ def plot_state_action_partition(state_action_partition, show=True):
     c = np.array(c, dtype=np.int32)
 
     plt.scatter(x[:, 0], x[:, 1], c=c, cmap="hot", vmin=0, vmax=np.max(c) + 2)
+    plt.xlabel("States")
+    plt.ylabel("Actions")
 
     if show:
         plt.show()

@@ -46,5 +46,5 @@ f = model_utils.CustomLogisticRegression()
 state_action_partition, state_partition = continuous_homomorphism.full_partition_iteration(
     lambda: gather_experience(env, 200), d, k, 1,
     visualize_state_action_partition=visualize_state_action_partition,
-    visualize_state_partition=visualize_state_partition
+    visualize_state_partition=visualize_state_partition, max_iteration_steps=1
 )
