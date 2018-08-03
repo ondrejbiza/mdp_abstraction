@@ -133,7 +133,8 @@ def get_experience(state_action_partition):
 
 
 def full_partition_iteration(gather_experience, distance, k, num_steps,
-                             visualize_state_action_partition=None, visualize_state_partition=None):
+                             visualize_state_action_partition=None, visualize_state_partition=None,
+                             max_iteration_steps=2):
 
     state_action_partition = set()
 
@@ -152,7 +153,8 @@ def full_partition_iteration(gather_experience, distance, k, num_steps,
 
         # rearrange partition
         state_action_partition = partition_iteration(state_action_partition, distance, k,
-                                                     visualize_state_action_partition=visualize_state_action_partition)
+                                                     visualize_state_action_partition=visualize_state_action_partition,
+                                                     max_steps=max_iteration_steps)
 
         # visualize rearranged partition
         if visualize_state_action_partition is not None:

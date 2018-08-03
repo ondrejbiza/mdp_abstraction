@@ -18,7 +18,7 @@ def plot_background(env, show=True):
     x = np.array(x)
     y = np.array([env.get_state_action_block(p[0], p[1]) for p in x])
 
-    plt.scatter(x[:, 0], x[:, 1], c=y, marker="s")
+    plt.scatter(x[:, 0], x[:, 1], c=y, marker="s", cmap="Greys", vmin=-2, vmax=8)
 
     if show:
         plt.show()
@@ -32,12 +32,18 @@ def plot_state_action_partition(state_action_partition, show=True):
     :return:                            None.
     """
 
-    for block in state_action_partition:
-        x = np.empty((len(block), 2))
-        for idx, t in enumerate(block):
-            x[idx, 0] = t[0]
-            x[idx, 1] = t[1]
-        plt.scatter(x[:, 0], x[:, 1])
+    x = []
+    c = []
+
+    for idx, block in enumerate(state_action_partition):
+        for transition in block:
+            x.append([transition[0], transition[1]])
+            c.append(idx)
+
+    x = np.array(x, dtype=np.float32)
+    c = np.array(c, dtype=np.int32)
+
+    plt.scatter(x[:, 0], x[:, 1], c=c, cmap="hot", vmin=0, vmax=np.max(c) + 2)
 
     if show:
         plt.show()
