@@ -2,7 +2,7 @@ import copy as cp
 import numpy as np
 from envs.continuous_3 import ContinuousEnv3
 import continuous_homomorphism_knn
-import model_utils, vis_utils
+import vis_utils
 
 
 def gather_experience(env, num):
@@ -43,7 +43,6 @@ env = ContinuousEnv3()
 
 d = env.state_distance
 k = 10
-f = model_utils.CustomLogisticRegression()
 
 
 state_action_partition, state_partition = continuous_homomorphism_knn.full_partition_iteration(
