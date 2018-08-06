@@ -1,7 +1,7 @@
 import copy as cp
 import numpy as np
 from envs.continuous_3 import ContinuousEnv3
-import continuous_homomorphism
+import continuous_homomorphism_knn
 import model_utils, vis_utils
 
 
@@ -46,7 +46,7 @@ k = 10
 f = model_utils.CustomLogisticRegression()
 
 
-state_action_partition, state_partition = continuous_homomorphism.full_partition_iteration(
+state_action_partition, state_partition = continuous_homomorphism_knn.full_partition_iteration(
     lambda: gather_experience(env, 400), d, k, 1,
     visualize_state_action_partition=visualize_state_action_partition,
     visualize_state_partition=visualize_state_partition,
