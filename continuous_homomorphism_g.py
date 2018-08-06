@@ -1,0 +1,156 @@
+import copy as cp
+import numpy as np
+
+
+def split(state_action_block, state_block, partition):
+
+    partition = cp.deepcopy(partition)
+    partition.remove(state_action_block)
+
+    new_blocks = {}
+    for state, action, reward, next_state, done in state_action_block:
+
+        key = (reward, next_state in state_block)
+
+        if key not in new_blocks.keys():
+            new_blocks[key] = []
+
+        new_blocks[key].append((state, action, reward, next_state, done))
+
+    for new_block in new_blocks.values():
+        partition.add(frozenset(new_block))
+
+    return partition
+
+
+def train_classifier(state_action_partition, classifier):
+
+    x = []
+    y = []
+
+    for idx, block in enumerate(state_action_partition):
+
+        for state, action, _, _, _ in block:
+
+            x.append([state, action])
+            y.append(idx)
+
+    x = np.array(x, dtype=np.float32)
+    y = np.array(y, dtype=np.int32)
+
+    classifier.fit(x, y)
+
+
+def get_state_partition(state_action_partition, classifier, sample_actions):
+
+    states = set()
+    for block in state_action_partition:
+        for state, action, reward, next_state, done in block:
+            states.add(state)
+            states.add(next_state)
+
+    state_partition = {}
+
+    for state in states:
+        actions = sample_actions(state)
+        blocks = set()
+        for action in actions:
+            blocks.add(classifier.predict(state, action))
+        key = frozenset(blocks)
+        if key not in state_partition:
+            state_partition[key] = []
+        state_partition[key].append(state)
+
+    state_partition = set([frozenset(value) for value in state_partition.values()])
+    return state_partition
+
+
+def partition_improvement(partition, classifier, sample_actions, visualize_state_action_partition=None):
+
+    new_partition = cp.deepcopy(partition)
+    state_partition = get_state_partition(new_partition, classifier, sample_actions)
+
+    for state_block in state_partition:
+
+        flag = True
+
+        while flag:
+
+            flag = False
+
+            for new_block in new_partition:
+
+                tmp_new_partition = split(new_block, state_block, new_partition)
+
+                if new_partition != tmp_new_partition:
+
+                    new_partition = tmp_new_partition
+
+                    if visualize_state_action_partition is not None:
+                        print("split:")
+                        visualize_state_action_partition(new_partition)
+
+                    flag = True
+                    break
+
+    train_classifier(new_partition, classifier)
+
+    return new_partition
+
+
+def partition_iteration(partition, classifier, sample_actions, max_steps=2, visualize_state_action_partition=None):
+
+    new_partition = partition_improvement(
+        partition, classifier, sample_actions, visualize_state_action_partition=visualize_state_action_partition
+    )
+    step = 1
+
+    while partition != new_partition and step < max_steps:
+
+        partition = new_partition
+        new_partition = partition_improvement(
+            partition, classifier, sample_actions, visualize_state_action_partition=visualize_state_action_partition
+        )
+
+        step += 1
+
+    return new_partition
+
+
+def full_partition_iteration(gather_experience, classifier, sample_actions, num_steps,
+                             visualize_state_action_partition=None,
+                             visualize_state_partition=None, max_iteration_steps=2):
+
+    state_action_partition = set()
+    all_experience = []
+
+    for step in range(num_steps):
+
+        # add experience
+        all_experience += gather_experience()
+        state_action_partition = {frozenset(all_experience)}
+
+        # visualize added experience
+        if visualize_state_action_partition is not None:
+            visualize_state_action_partition(state_action_partition)
+
+        # rearrange partition
+        state_action_partition = partition_iteration(
+            state_action_partition, classifier, sample_actions,
+            visualize_state_action_partition=visualize_state_action_partition, max_steps=max_iteration_steps
+        )
+
+        # visualize rearranged partition
+        if visualize_state_action_partition is not None:
+            print("step {:d} state-action partition:".format(step + 1))
+            visualize_state_action_partition(state_action_partition)
+
+        # visualize state partition
+        if visualize_state_partition is not None:
+            print("step {:d} state partition:".format(step + 1))
+            state_partition = get_state_partition(state_action_partition, classifier, sample_actions)
+            visualize_state_partition(state_partition)
+
+    state_partition = get_state_partition(state_action_partition, classifier, sample_actions)
+
+    return state_action_partition, state_partition
