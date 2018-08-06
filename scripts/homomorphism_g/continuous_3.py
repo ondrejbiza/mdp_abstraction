@@ -1,3 +1,4 @@
+import argparse
 import copy as cp
 import numpy as np
 from sklearn.tree import DecisionTreeClassifier
@@ -37,26 +38,33 @@ def sample_actions(state):
     return actions
 
 
-def visualize_state_action_partition(state_action_partition):
+def main(args):
 
-    vis_utils.plot_background(env, show=False)
-    vis_utils.plot_state_action_partition(state_action_partition, show=True)
+    env = ContinuousEnv3()
+
+    def visualize_state_action_partition(state_action_partition):
+        vis_utils.plot_background(env, show=False)
+        vis_utils.plot_state_action_partition(state_action_partition, show=True)
+
+    def visualize_state_partition(state_partition):
+        vis_utils.plot_background(env, show=False)
+        vis_utils.plot_state_partition(state_partition, show=True)
+
+    g = model_utils.GModel(DecisionTreeClassifier)
+
+    continuous_homomorphism_g.full_partition_iteration(
+        lambda: gather_experience(env, args.num_experience), g, sample_actions, 1,
+        visualize_state_action_partition=visualize_state_action_partition,
+        visualize_state_partition=visualize_state_partition,
+        max_iteration_steps=20
+    )
 
 
-def visualize_state_partition(state_partition):
+if __name__ == "__main__":
 
-    vis_utils.plot_background(env, show=False)
-    vis_utils.plot_state_partition(state_partition, show=True)
+    parser = argparse.ArgumentParser()
 
+    parser.add_argument("num_experience", type=int, default=400)
 
-env = ContinuousEnv3()
-
-g = model_utils.GModel(DecisionTreeClassifier)
-
-
-state_action_partition, state_partition = continuous_homomorphism_g.full_partition_iteration(
-    lambda: gather_experience(env, 400), g, sample_actions, 1,
-    visualize_state_action_partition=visualize_state_action_partition,
-    visualize_state_partition=visualize_state_partition,
-    max_iteration_steps=20
-)
+    parsed = parser.parse_args()
+    main(parsed)
