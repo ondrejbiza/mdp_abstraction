@@ -38,20 +38,7 @@ def train_classifier(state_action_partition, classifier):
     :return:                                None.
     """
 
-    x = []
-    y = []
-
-    for idx, block in enumerate(state_action_partition):
-
-        for state, action, _, _, _ in block:
-
-            x.append([state, action])
-            y.append(idx)
-
-    x = np.array(x, dtype=np.float32)
-    y = np.array(y, dtype=np.int32)
-
-    classifier.fit(x, y)
+    classifier.fit(state_action_partition)
 
 
 def get_state_partition(state_action_partition, classifier, sample_actions):

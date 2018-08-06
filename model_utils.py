@@ -31,7 +31,7 @@ class GModel:
 
     def __init__(self, model):
 
-        self.logistic_regression = model()
+        self.model = model()
         self.single_class = True
 
     def predict(self, state, action):
@@ -40,9 +40,22 @@ class GModel:
             return 0
         else:
             x = np.array([[state, action]], dtype=np.float32)
-            return self.logistic_regression.predict(x)[0]
+            return self.model.predict(x)[0]
 
-    def fit(self, x, y):
+    def fit(self, state_action_partition):
+
+        x = []
+        y = []
+
+        for idx, block in enumerate(state_action_partition):
+
+            for state, action, _, _, _ in block:
+                x.append([state, action])
+                y.append(idx)
+
+        x = np.array(x, dtype=np.float32)
+
+        y = np.array(y, dtype=np.int32)
 
         if len(x.shape) == 1:
             x = np.expand_dims(x, axis=1)
@@ -51,4 +64,4 @@ class GModel:
             self.single_class = True
         else:
             self.single_class = False
-            self.logistic_regression.fit(x, y)
+            self.model.fit(x, y)
