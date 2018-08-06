@@ -57,5 +57,6 @@ g = model_utils.GModel(DecisionTreeClassifier)
 state_action_partition, state_partition = continuous_homomorphism_g.full_partition_iteration(
     lambda: gather_experience(env, 400), g, sample_actions, 1,
     visualize_state_action_partition=visualize_state_action_partition,
-    visualize_state_partition=visualize_state_partition
+    visualize_state_partition=visualize_state_partition,
+    max_iteration_steps=20
 )
