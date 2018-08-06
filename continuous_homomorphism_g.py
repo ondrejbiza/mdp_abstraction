@@ -3,6 +3,13 @@ import numpy as np
 
 
 def split(state_action_block, state_block, partition):
+    """
+    Split a state-action block with respect to a state block.
+    :param state_action_block:      State-action block.
+    :param state_block:             State block.
+    :param partition:               State-action partition.
+    :return:                        New state-action partition with possibly more blocks.
+    """
 
     partition = cp.deepcopy(partition)
     partition.remove(state_action_block)
@@ -24,6 +31,12 @@ def split(state_action_block, state_block, partition):
 
 
 def train_classifier(state_action_partition, classifier):
+    """
+    Train a model to classify state-action pairs into blocks in state-action partition.
+    :param state_action_partition:          State-action partition.
+    :param classifier:                      Classifier.
+    :return:                                None.
+    """
 
     x = []
     y = []
@@ -42,6 +55,13 @@ def train_classifier(state_action_partition, classifier):
 
 
 def get_state_partition(state_action_partition, classifier, sample_actions):
+    """
+    Get a state partition from a state-action partition using a state-action classifier.
+    :param state_action_partition:      State-action partition.
+    :param classifier:                  Classifier.
+    :param sample_actions:              Function that samples actions.
+    :return:                            State partition.
+    """
 
     states = set()
     for block in state_action_partition:
@@ -66,6 +86,14 @@ def get_state_partition(state_action_partition, classifier, sample_actions):
 
 
 def partition_improvement(partition, classifier, sample_actions, visualize_state_action_partition=None):
+    """
+    Run a single step of partition improvement.
+    :param partition:                               State-action partition.
+    :param classifier:                              State-action classifier.
+    :param sample_actions:                          Function for sampling actions.
+    :param visualize_state_action_partition:        Visualize state-action partition.
+    :return:                                        Improved state action partition.
+    """
 
     new_partition = cp.deepcopy(partition)
     state_partition = get_state_partition(new_partition, classifier, sample_actions)
@@ -99,6 +127,15 @@ def partition_improvement(partition, classifier, sample_actions, visualize_state
 
 
 def partition_iteration(partition, classifier, sample_actions, max_steps=2, visualize_state_action_partition=None):
+    """
+    Run partition iteration.
+    :param partition:                                   Initial partition.
+    :param classifier:                                  State-action classifier.
+    :param sample_actions:                              Sample actions function.
+    :param max_steps:                                   Maximum number of partition iteration steps.
+    :param visualize_state_action_partition:            Visualize state-action partition.
+    :return:                                            New state-action partition.
+    """
 
     new_partition = partition_improvement(
         partition, classifier, sample_actions, visualize_state_action_partition=visualize_state_action_partition
@@ -118,8 +155,19 @@ def partition_iteration(partition, classifier, sample_actions, max_steps=2, visu
 
 
 def full_partition_iteration(gather_experience, classifier, sample_actions, num_steps,
-                             visualize_state_action_partition=None,
-                             visualize_state_partition=None, max_iteration_steps=2):
+                             visualize_state_action_partition=None, visualize_state_partition=None,
+                             max_iteration_steps=2):
+    """
+    Run the Full Partition Iteration algorithm.
+    :param gather_experience:                       Gather experience function.
+    :param classifier:                              State-action classifier.
+    :param sample_actions:                          Sample actions function.
+    :param num_steps:                               Number of steps.
+    :param visualize_state_action_partition:        Visualize state-action partition.
+    :param visualize_state_partition:               Visualize state partition.
+    :param max_iteration_steps:                     Maximum number of partition improvement steps.
+    :return:                                        State-action partition and state partition.
+    """
 
     state_action_partition = set()
     all_experience = []
