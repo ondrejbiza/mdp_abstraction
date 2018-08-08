@@ -1,5 +1,4 @@
 import copy as cp
-import numpy as np
 
 
 def split(state_action_block, state_block, partition):
