@@ -1,7 +1,7 @@
 import copy as cp
 import numpy as np
 from sklearn.tree import DecisionTreeClassifier
-from envs.continuous_1 import ContinuousEnv1
+from envs.continuous_2 import ContinuousEnv2
 import continuous_homomorphism_g
 import model_utils, vis_utils
 
@@ -21,6 +21,9 @@ def gather_experience(env, num):
             reward, next_state, done = env.step(action)
 
             transitions.append((state, action, reward, next_state, done))
+
+            if done:
+                break
 
     return transitions
 
@@ -46,9 +49,9 @@ def visualize_state_partition(state_partition):
     vis_utils.plot_state_partition(state_partition, show=True)
 
 
-env = ContinuousEnv1()
+env = ContinuousEnv2()
 
-g = model_utils.GModel(DecisionTreeClassifier)
+g = model_utils.GModel(DecisionTreeClassifier())
 
 
 state_action_partition, state_partition = continuous_homomorphism_g.full_partition_iteration(

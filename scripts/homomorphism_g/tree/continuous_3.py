@@ -50,7 +50,7 @@ def main(args):
         vis_utils.plot_background(env, show=False)
         vis_utils.plot_state_partition(state_partition, show=True)
 
-    g = model_utils.GModel(DecisionTreeClassifier)
+    g = model_utils.GModel(DecisionTreeClassifier())
 
     continuous_homomorphism_g.full_partition_iteration(
         lambda: gather_experience(env, args.num_experience), g, sample_actions, 1,
@@ -64,7 +64,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("num_experience", type=int, default=400)
+    parser.add_argument("--num-experience", type=int, default=400)
 
     parsed = parser.parse_args()
     main(parsed)
