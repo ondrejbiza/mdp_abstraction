@@ -31,7 +31,7 @@ def split(state_action_block, state_block, partition, split_threshold):
         else:
             above_threshold[key] = False
 
-    if not np.any(above_threshold.keys()):
+    if not np.any(list(above_threshold.values())):
         # all blocks are smaller than  threshold, do nothing
         partition.add(state_action_block)
     else:
