@@ -7,6 +7,7 @@ def split(state_action_block, state_block, partition, split_threshold):
     Split a state-action block with respect to a state block.
     :param state_action_block:      State-action block.
     :param state_block:             State block.
+    :param split_threshold:         Minimum number of samples allowed in a state-action block.
     :param partition:               State-action partition.
     :return:                        New state-action partition with possibly more blocks.
     """
@@ -106,6 +107,7 @@ def partition_improvement(partition, classifier, sample_actions, split_threshold
     :param partition:                               State-action partition.
     :param classifier:                              State-action classifier.
     :param sample_actions:                          Function for sampling actions.
+    :param split_threshold:                         Minimum number of samples allowed in a state-action block.
     :param visualize_state_action_partition:        Visualize state-action partition.
     :return:                                        Improved state action partition.
     """
@@ -148,6 +150,7 @@ def partition_iteration(partition, classifier, sample_actions, split_threshold, 
     :param partition:                                   Initial partition.
     :param classifier:                                  State-action classifier.
     :param sample_actions:                              Sample actions function.
+    :param split_threshold:                             Minimum number of samples allowed in a state-action block.
     :param max_steps:                                   Maximum number of partition iteration steps.
     :param visualize_state_action_partition:            Visualize state-action partition.
     :return:                                            New state-action partition.
@@ -181,6 +184,7 @@ def full_partition_iteration(gather_experience, classifier, sample_actions, num_
     :param classifier:                              State-action classifier.
     :param sample_actions:                          Sample actions function.
     :param num_steps:                               Number of steps.
+    :param split_threshold:                         Minimum number of samples allowed in a state-action block.
     :param visualize_state_action_partition:        Visualize state-action partition.
     :param visualize_state_partition:               Visualize state partition.
     :param max_iteration_steps:                     Maximum number of partition improvement steps.
@@ -224,7 +228,11 @@ def full_partition_iteration(gather_experience, classifier, sample_actions, num_
 
 def edit_distance(key1, key2):
     """
+    Edit distance between two keys.
     https://www.geeksforgeeks.org/edit-distance-dp-5/
+    :param key1:        The first key.
+    :param key2:        The second key.
+    :returns:           Edit distance between the two keys.
     """
 
     m = len(key1)

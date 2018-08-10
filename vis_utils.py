@@ -52,6 +52,12 @@ def plot_state_action_partition(state_action_partition, show=True):
 
 
 def plot_state_partition(state_partition, show=True):
+    """
+    Plot state partition.
+    :param state_partition:     State partition.
+    :param show:                Show plot.
+    :return:                    None.
+    """
 
     for block in state_partition:
         x = np.ones((len(block), 2))
@@ -64,12 +70,20 @@ def plot_state_partition(state_partition, show=True):
 
 
 def plot_decision_boundary(classifier, height, width, show=True):
+    """
+    Plot decision boundary for a classifier.
+    :param classifier:      A classifier.
+    :param height:          Height of the 2D input space.
+    :param width:           Width of the 2D input space.
+    :param show:            Show plot.
+    :return:                None.
+    """
 
     xx, yy = np.meshgrid(np.arange(0, height, 0.01), np.arange(0, width, 0.01))
     data = np.c_[xx.ravel(), yy.ravel()]
-    Z = classifier.batch_predict(data[:, 0], data[:, 1])
-    Z = np.array(Z).reshape(xx.shape)
-    plt.contourf(xx, yy, Z, alpha=0.4)
+    z = classifier.batch_predict(data[:, 0], data[:, 1])
+    z = np.array(z).reshape(xx.shape)
+    plt.contourf(xx, yy, z, alpha=0.4)
 
     if show:
         plt.show()

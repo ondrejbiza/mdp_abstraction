@@ -2,6 +2,12 @@ import numpy as np
 
 
 def overlap(env, state_action_partition):
+    """
+    Compute an overlap between a predicted state-action partition and the ground-truth partition.
+    :param env:                         Environment.
+    :param state_action_partition:      Predicted state-action partition.
+    :return:                            Number of correctly classified points and the total number of points.
+    """
 
     num_gt_partitions = np.max(env.MINIMAL_STATE_ACTION_MAP) + 1
     num_predicted_partition = len(state_action_partition)
