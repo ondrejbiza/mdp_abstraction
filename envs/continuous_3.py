@@ -8,6 +8,11 @@ class ContinuousEnv3:
         [0, 3, 4]
     ], dtype=np.int32)
 
+    MINIMAL_STATE_ACTION_MAP = np.array([
+        [1, 0, 3],
+        [0, 2, 3]
+    ], dtype=np.int32)
+
     STATE_MAP = np.array([0, 1, 2], dtype=np.int32)
 
     P = {
@@ -53,6 +58,13 @@ class ContinuousEnv3:
         action_idx = int(np.floor(action))
 
         return self.STATE_ACTION_MAP[action_idx, state_idx]
+
+    def get_state_action_block_minimal_map(self, state, action):
+
+        state_idx = int(np.floor(state))
+        action_idx = int(np.floor(action))
+
+        return self.MINIMAL_STATE_ACTION_MAP[action_idx, state_idx]
 
     def get_state_block(self, state):
 

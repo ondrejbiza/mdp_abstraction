@@ -69,8 +69,8 @@ def main(args):
         max_iteration_steps=20
     )
 
-    hits = evaluation.overlap(env, list(state_action_partition))
-    print("{:.2f}% accuracy ({:d}/{:d})".format((hits / args.num_experience) * 100, hits, args.num_experience))
+    hits, total = evaluation.overlap(env, list(state_action_partition))
+    print("{:.2f}% accuracy ({:d}/{:d})".format((hits / total) * 100, hits, total))
 
 
 if __name__ == "__main__":
