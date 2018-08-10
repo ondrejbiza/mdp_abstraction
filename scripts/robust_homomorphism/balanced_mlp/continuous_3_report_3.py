@@ -35,6 +35,6 @@ for i, t1 in enumerate(SPLIT_THRESHOLD_LIST):
             results_array[i, j] = mean_accuracy
 
 sns.heatmap(results_array, xticklabels=SPLIT_THRESHOLD_LIST, yticklabels=SPLIT_THRESHOLD_LIST, annot=True, cbar=False)
-plt.xlabel("split threshold for state-action blocks")
-plt.ylabel("split threshold for state blocks")
+plt.ylabel("split threshold for state-action blocks")
+plt.xlabel("split threshold for state blocks")
 plt.show()
