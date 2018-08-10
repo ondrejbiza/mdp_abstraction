@@ -25,8 +25,6 @@ def overlap(env, state_action_partition):
 
                     num_matches[i, j] += 1
 
-    print(num_matches)
-
     # match ground-truth partitions to predicted partitions
     matches = {}
     hits = 0

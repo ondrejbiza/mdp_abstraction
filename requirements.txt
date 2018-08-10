@@ -2,3 +2,4 @@ sklearn
 numpy
 matplotlib
 tensorflow
+seaborn

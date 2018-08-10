@@ -61,3 +61,15 @@ def plot_state_partition(state_partition, show=True):
 
     if show:
         plt.show()
+
+
+def plot_decision_boundary(classifier, height, width, show=True):
+
+    xx, yy = np.meshgrid(np.arange(0, height, 0.01), np.arange(0, width, 0.01))
+    data = np.c_[xx.ravel(), yy.ravel()]
+    Z = classifier.batch_predict(data[:, 0], data[:, 1])
+    Z = np.array(Z).reshape(xx.shape)
+    plt.contourf(xx, yy, Z, alpha=0.4)
+
+    if show:
+        plt.show()
