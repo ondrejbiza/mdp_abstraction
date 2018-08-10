@@ -6,11 +6,21 @@ from sklearn.utils import shuffle
 class GModel:
 
     def __init__(self, model):
+        """
+        Wrapper around a sklearn model for estimating g.
+        :param model:       Sklearn model.
+        """
 
         self.model = model
         self.single_class = True
 
     def predict(self, state, action):
+        """
+        Predict into which block the given state-action pair belongs.
+        :param state:       State.
+        :param action:      Action.
+        :return:            Index of a state-action block.
+        """
 
         if self.single_class:
             return 0
@@ -19,6 +29,12 @@ class GModel:
             return self.model.predict(x)[0]
 
     def batch_predict(self, states, actions):
+        """
+        Predict into which block a batch of state-action pairs belong.
+        :param states:      Batch of states.
+        :param actions:     Batch of actions.
+        :return:            List of indices of state-action blocks.
+        """
 
         if self.single_class:
             return [0] * len(states)
@@ -27,6 +43,11 @@ class GModel:
             return self.model.predict(x)
 
     def fit(self, state_action_partition):
+        """
+        Train the model to recognize given state-action blocks.
+        :param state_action_partition:          State-action partition.
+        :return:                                None.
+        """
 
         x = []
         y = []
@@ -55,6 +76,18 @@ class BalancedMLP:
 
     def __init__(self, state_shape, hiddens, learning_rate, batch_size, weight_decay, validation_fraction=0.2,
                  momentum=0.9, balanced_sampling=True, verbose=False):
+        """
+        A Tensorflow neural network with dataset balancing.
+        :param state_shape:                 Shape of the state.
+        :param hiddens:                     List of neuron counts for hidden layers.
+        :param learning_rate:               Learning rate.
+        :param batch_size:                  Batch size.
+        :param weight_decay:                Weight decay, applied to all parameterized layers.
+        :param validation_fraction:         Fraction of data to use for validation.
+        :param momentum:                    Momentum for SGD optimizer.
+        :param balanced_sampling:           Use balanced sampling of the dataset.
+        :param verbose:                     Print additional information.
+        """
 
         self.state_shape = state_shape
         self.hiddens = hiddens
@@ -70,6 +103,12 @@ class BalancedMLP:
         self.session = None
 
     def predict(self, state, action):
+        """
+        Predict into which block the given state-action pair belongs.
+        :param state:       State.
+        :param action:      Action.
+        :return:            Index of a state-action block.
+        """
 
         if self.single_class:
             return 0
@@ -82,6 +121,12 @@ class BalancedMLP:
             return np.argmax(logits)
 
     def batch_predict(self, states, actions):
+        """
+        Predict into which block a batch of state-action pairs belong.
+        :param states:      Batch of states.
+        :param actions:     Batch of actions.
+        :return:            List of indices of state-action blocks.
+        """
 
         if self.single_class:
             return [0] * len(states)
@@ -93,6 +138,11 @@ class BalancedMLP:
             return np.argmax(logits, axis=1)
 
     def fit(self, state_action_partition):
+        """
+        Train the model to recognize given state-action blocks.
+        :param state_action_partition:          State-action partition.
+        :return:                                None.
+        """
 
         states = []
         actions = []
@@ -116,6 +166,13 @@ class BalancedMLP:
             self.__retrain(states, actions, blocks)
 
     def __retrain(self, states, actions, blocks):
+        """
+        Build a new neural network and train it.
+        :param states:      List of states.
+        :param actions:     List of actions.
+        :param blocks:      Indexes of state-action blocks the state-action pairs transition to.
+        :return:            None.
+        """
 
         num_classes = np.max(blocks) + 1
 
@@ -140,12 +197,21 @@ class BalancedMLP:
         self.__train_network(states, actions, blocks)
 
     def __build_placeholders(self):
+        """
+        Build Tensorflow placeholders.
+        :return:        None.
+        """
 
         self.states_pl = tf.placeholder(tf.float32, shape=(None,), name="states_pl")
         self.actions_pl = tf.placeholder(tf.float32, shape=(None,), name="actions_pl")
         self.labels_pl = tf.placeholder(tf.int32, shape=(None,), name="labels_pl")
 
     def __build_network(self, num_classes):
+        """
+        Build the neural network.
+        :param num_classes:     Number of classes to predict.
+        :return:                None.
+        """
 
         self.num_classes = num_classes
 
@@ -162,6 +228,10 @@ class BalancedMLP:
                                           kernel_regularizer=get_weight_regularizer(self.weight_decay))
 
     def __build_training(self):
+        """
+        Build Tensorflow training operation.
+        :return:        None.
+        """
 
         self.loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=self.labels_pl, logits=self.logits)
         self.accuracy = tf.reduce_mean(tf.cast(tf.equal(self.labels_pl, tf.cast(tf.argmax(self.logits, axis=1),
@@ -169,6 +239,15 @@ class BalancedMLP:
         self.train_step = tf.train.MomentumOptimizer(self.learning_rate, self.momentum).minimize(self.loss)
 
     def __train_network(self, states, actions, blocks, max_training_steps=2000, validation_frequency=50):
+        """
+        Train the neural network.
+        :param states:                  List of states.
+        :param actions:                 List of actions.
+        :param blocks:                  Indexes of state-action blocks the state-action pairs transition to.
+        :param max_training_steps:      Maximum number of training steps.
+        :param validation_frequency:    How often to run validation.
+        :return:                        None.
+        """
 
         # split dataset
         if self.balanced_sampling:
@@ -255,6 +334,11 @@ class BalancedMLP:
             self.session.run(variable.assign(best_parameters[idx]))
 
     def __get_min_samples_per_class(self, blocks):
+        """
+        Get minimum number of samples.
+        :param blocks:      List of blocks.
+        :return:            Number of samples in the smallest block.
+        """
 
         min_samples = None
 
@@ -267,6 +351,13 @@ class BalancedMLP:
         return min_samples
 
     def __balanced_split(self, states, actions, blocks):
+        """
+        Create a stratified sample of a validation set.
+        :param states:                  List of states.
+        :param actions:                 List of actions.
+        :param blocks:                  Indexes of state-action blocks the state-action pairs transition to.
+        :return:                        Training and validation sets.
+        """
 
         states, actions, blocks = shuffle(states, actions, blocks)
 
@@ -299,6 +390,13 @@ class BalancedMLP:
         return train_states, train_actions, train_blocks, valid_states, valid_actions, valid_blocks
 
     def __balanced_sampling(self, states, actions, blocks):
+        """
+        Create a balanced sample.
+        :param states:                  List of states.
+        :param actions:                 List of actions.
+        :param blocks:                  Indexes of state-action blocks the state-action pairs transition to.
+        :return:                        A balanced training sample.
+        """
 
         min_samples = self.__get_min_samples_per_class(blocks)
 
@@ -326,11 +424,19 @@ class BalancedMLP:
         return shuffle(sampled_states, sampled_actions, sampled_blocks)
 
     def __start_session(self):
+        """
+        Start Tensorflow session and initialize all variables.
+        :return:
+        """
 
         self.session = tf.Session()
         self.session.run(tf.global_variables_initializer())
 
     def __stop_session(self):
+        """
+        Stop Tensorflow session.
+        :return:
+        """
 
         self.session.close()
 
