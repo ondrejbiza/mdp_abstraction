@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 
 LOAD_DIR = "results/robust_homomorphism/balanced_mlp"
-LOAD_FILE = "continuous_3_evaluation.pickle"
+LOAD_FILE = "continuous_3_evaluation_2.pickle"
 LOAD_PATH = os.path.join(LOAD_DIR, LOAD_FILE)
 
 NUM_RUNS = 10
@@ -36,6 +36,6 @@ for i, num_experience in enumerate(NUM_EXPERIENCE_LIST):
             results_array[i, j] = mean_accuracy
 
 sns.heatmap(results_array, xticklabels=SPLIT_THRESHOLD_LIST, yticklabels=NUM_EXPERIENCE_LIST, annot=True, cbar=False)
-plt.xlabel("split threshold")
+plt.xlabel("split threshold for state-action and state blocks")
 plt.ylabel("num experience")
 plt.show()

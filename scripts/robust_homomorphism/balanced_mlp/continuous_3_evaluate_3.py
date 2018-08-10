@@ -38,13 +38,13 @@ def sample_actions(state):
     return actions
 
 
-def run(num_experience, split_threshold):
+def run(num_experience, state_action_threshold, state_threshold):
 
     env = ContinuousEnv3()
     g = model_utils.BalancedMLP([1], [8, 16], 0.001, 32, 0.0, verbose=True)
 
     state_action_partition, state_partition = robust_homomorphism.full_partition_iteration(
-        lambda: gather_experience(env, num_experience), g, sample_actions, 1, split_threshold,
+        lambda: gather_experience(env, num_experience), g, sample_actions, 1, state_action_threshold, state_threshold,
         max_iteration_steps=20
     )
 
@@ -59,10 +59,10 @@ def main(args):
     os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
     NUM_RUNS = 10
-    NUM_EXPERIENCE_LIST = [100, 200, 500, 1000, 2000, 5000]
+    NUM_EXPERIENCE = 2000
     SPLIT_THRESHOLD_LIST = [50, 100, 200, 500]
     SAVE_DIR = "results/robust_homomorphism/balanced_mlp"
-    SAVE_FILE = "continuous_3_evaluation.pickle"
+    SAVE_FILE = "continuous_3_evaluation_3.pickle"
     SAVE_PATH = os.path.join(SAVE_DIR, SAVE_FILE)
 
     # maybe create dir
@@ -75,19 +75,19 @@ def main(args):
     else:
         results = {}
 
-    for num_experience in NUM_EXPERIENCE_LIST:
+    for t1 in SPLIT_THRESHOLD_LIST:
 
-        for split_threshold in SPLIT_THRESHOLD_LIST:
+        for t2 in SPLIT_THRESHOLD_LIST:
 
             for run_idx in range(NUM_RUNS):
 
-                key = (num_experience, split_threshold, run_idx)
+                key = (t1, t2, run_idx)
 
                 # skip if this setting is already in results
                 if key in results:
                     continue
 
-                accuracy = run(num_experience, split_threshold)
+                accuracy = run(NUM_EXPERIENCE, t1, t2)
                 results[key]= accuracy
 
                 # save results after each run

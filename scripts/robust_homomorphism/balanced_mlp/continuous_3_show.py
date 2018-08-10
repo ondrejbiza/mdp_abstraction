@@ -57,10 +57,9 @@ def main(args):
         vis_utils.plot_state_partition(state_partition, show=True)
 
     state_action_partition, state_partition = robust_homomorphism.full_partition_iteration(
-        lambda: gather_experience(env, args.num_experience), g, sample_actions, 1, args.split_threshold,
-        visualize_state_action_partition=visualize_state_action_partition,
-        visualize_state_partition=visualize_state_partition,
-        max_iteration_steps=20
+        lambda: gather_experience(env, args.num_experience), g, sample_actions, 1, args.state_action_split_threshold,
+        args.state_split_threshold, visualize_state_action_partition=visualize_state_action_partition,
+        visualize_state_partition=visualize_state_partition, max_iteration_steps=20
     )
 
     hits, total = evaluation.overlap(env, list(state_action_partition))
@@ -72,7 +71,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-e", "--num-experience", type=int, default=2000)
-    parser.add_argument("-t", "--split-threshold", type=int, default=200)
+    parser.add_argument("-a", "--state-action-split-threshold", type=int, default=200)
+    parser.add_argument("-s", "--state-split-threshold", type=int, default=200)
 
     parsed = parser.parse_args()
     main(parsed)

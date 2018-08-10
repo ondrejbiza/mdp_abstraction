@@ -71,7 +71,7 @@ def train_classifier(state_action_partition, classifier):
     classifier.fit(state_action_partition)
 
 
-def get_state_partition(state_action_partition, classifier, sample_actions):
+def get_state_partition(state_action_partition, classifier, sample_actions, split_threshold):
     """
     Get a state partition from a state-action partition using a state-action classifier.
     :param state_action_partition:      State-action partition.
@@ -96,11 +96,44 @@ def get_state_partition(state_action_partition, classifier, sample_actions):
             state_partition[key] = []
         state_partition[key].append(state)
 
-    state_partition = set([frozenset(value) for value in state_partition.values()])
-    return state_partition
+    above_threshold = {}
+    for key, value in state_partition.items():
+        if len(value) >= split_threshold:
+            above_threshold[key] = True
+        else:
+            above_threshold[key] = False
+
+    if not np.any(list(above_threshold.values())):
+        # all blocks are smaller than  threshold, do nothing
+        state_partition_set = {frozenset(states)}
+    else:
+        for key, value in state_partition.items():
+            if not above_threshold[key]:
+                # block is below threshold, add to closest block above threshold
+                min_key = None
+                min_distance = None
+
+                for key2 in state_partition.keys():
+                    if above_threshold[key2]:
+                        distance = edit_distance(list(sorted(list(key))), list(sorted(list(key2))))
+                        if min_distance is None or min_distance > distance:
+                            min_distance = distance
+                            min_key = key2
+
+                state_partition[min_key] += state_partition[key]
+
+        # block is above threshold
+        state_partition_set = set()
+
+        for key, value in state_partition.items():
+            if above_threshold[key]:
+                assert len(value) >= split_threshold
+                state_partition_set.add(frozenset(value))
+
+    return state_partition_set
 
 
-def partition_improvement(partition, classifier, sample_actions, split_threshold,
+def partition_improvement(partition, classifier, sample_actions, state_action_slit_threshold, state_split_threshold,
                           visualize_state_action_partition=None):
     """
     Run a single step of partition improvement.
@@ -113,7 +146,7 @@ def partition_improvement(partition, classifier, sample_actions, split_threshold
     """
 
     new_partition = cp.deepcopy(partition)
-    state_partition = get_state_partition(new_partition, classifier, sample_actions)
+    state_partition = get_state_partition(new_partition, classifier, sample_actions, state_split_threshold)
 
     for state_block in state_partition:
 
@@ -125,7 +158,7 @@ def partition_improvement(partition, classifier, sample_actions, split_threshold
 
             for new_block in new_partition:
 
-                tmp_new_partition = split(new_block, state_block, new_partition, split_threshold)
+                tmp_new_partition = split(new_block, state_block, new_partition, state_action_slit_threshold)
 
                 if new_partition != tmp_new_partition:
 
@@ -143,7 +176,7 @@ def partition_improvement(partition, classifier, sample_actions, split_threshold
     return new_partition
 
 
-def partition_iteration(partition, classifier, sample_actions, split_threshold, max_steps=2,
+def partition_iteration(partition, classifier, sample_actions, state_action_slit_threshold, state_split_threshold, max_steps=2,
                         visualize_state_action_partition=None):
     """
     Run partition iteration.
@@ -157,7 +190,7 @@ def partition_iteration(partition, classifier, sample_actions, split_threshold, 
     """
 
     new_partition = partition_improvement(
-        partition, classifier, sample_actions, split_threshold,
+        partition, classifier, sample_actions, state_action_slit_threshold, state_split_threshold,
         visualize_state_action_partition=visualize_state_action_partition
     )
     step = 1
@@ -166,7 +199,7 @@ def partition_iteration(partition, classifier, sample_actions, split_threshold, 
 
         partition = new_partition
         new_partition = partition_improvement(
-            partition, classifier, sample_actions, split_threshold,
+            partition, classifier, sample_actions, state_action_slit_threshold, state_split_threshold,
             visualize_state_action_partition=visualize_state_action_partition
         )
 
@@ -175,9 +208,9 @@ def partition_iteration(partition, classifier, sample_actions, split_threshold, 
     return new_partition
 
 
-def full_partition_iteration(gather_experience, classifier, sample_actions, num_steps, split_threshold,
-                             visualize_state_action_partition=None, visualize_state_partition=None,
-                             max_iteration_steps=2):
+def full_partition_iteration(gather_experience, classifier, sample_actions, num_steps, state_action_split_threshold,
+                             state_split_threshold, visualize_state_action_partition=None,
+                             visualize_state_partition=None, max_iteration_steps=2):
     """
     Run the Full Partition Iteration algorithm.
     :param gather_experience:                       Gather experience function.
@@ -206,7 +239,7 @@ def full_partition_iteration(gather_experience, classifier, sample_actions, num_
 
         # rearrange partition
         state_action_partition = partition_iteration(
-            state_action_partition, classifier, sample_actions, split_threshold,
+            state_action_partition, classifier, sample_actions, state_action_split_threshold, state_split_threshold,
             visualize_state_action_partition=visualize_state_action_partition, max_steps=max_iteration_steps
         )
 
@@ -218,10 +251,11 @@ def full_partition_iteration(gather_experience, classifier, sample_actions, num_
         # visualize state partition
         if visualize_state_partition is not None:
             print("step {:d} state partition:".format(step + 1))
-            state_partition = get_state_partition(state_action_partition, classifier, sample_actions)
+            state_partition = get_state_partition(state_action_partition, classifier, sample_actions,
+                                                  state_split_threshold)
             visualize_state_partition(state_partition)
 
-    state_partition = get_state_partition(state_action_partition, classifier, sample_actions)
+    state_partition = get_state_partition(state_action_partition, classifier, sample_actions, state_split_threshold)
 
     return state_action_partition, state_partition
 
