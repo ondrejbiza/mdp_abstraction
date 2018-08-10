@@ -58,7 +58,7 @@ def main(args):
 
     os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
-    NUM_RUNS = 10
+    NUM_RUNS = 50
     NUM_EXPERIENCE_LIST = [100, 200, 500, 1000, 2000, 5000]
     SPLIT_THRESHOLD_LIST = [50, 100, 200, 500]
     SAVE_DIR = "results/robust_homomorphism/balanced_mlp"
