@@ -186,7 +186,6 @@ class BalancedMLP:
             train_blocks = blocks[num_valid_samples:]
 
         # parameter search run
-        best_step = None
         best_accuracy = None
         best_parameters = None
 
@@ -236,13 +235,12 @@ class BalancedMLP:
 
                 if best_accuracy is None or balanced_accuracy > best_accuracy:
 
-                    best_step = step_idx
                     best_accuracy = balanced_accuracy
                     best_parameters = self.session.run(tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES))
 
                     if self.verbose:
 
-                        print("step {:d}".format(best_step))
+                        print("step {:d}".format(step_idx))
                         print("unbalanced accuracy: {:.2f}%".format(unbalanced_accuracy * 100))
                         print("balanced accuracy: {:.2f}%".format(balanced_accuracy * 100))
 

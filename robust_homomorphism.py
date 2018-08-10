@@ -89,9 +89,7 @@ def get_state_partition(state_action_partition, classifier, sample_actions):
 
     for state in states:
         actions = sample_actions(state)
-        blocks = set()
-        for action in actions:
-            blocks.add(classifier.predict(state, action))
+        blocks = set(classifier.batch_predict(np.repeat(np.expand_dims(state, axis=0), len(actions), axis=0), actions))
         key = frozenset(blocks)
         if key not in state_partition:
             state_partition[key] = []
