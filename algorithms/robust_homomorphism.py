@@ -2,6 +2,16 @@ import copy as cp
 import numpy as np
 
 
+class RobustHomomorphism:
+
+    def __init__(self):
+
+        pass
+
+    def split(self):
+
+        pass
+
 def split(state_action_block, state_block, partition, split_threshold):
     """
     Split a state-action block with respect to a state block.

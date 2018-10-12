@@ -1,8 +1,7 @@
-import envs.pick as pick
-import homomorphism
+import envs.redundant_pick as redundant_pick
+from algorithms import homomorphism
 
-
-state_action_partition = homomorphism.partition_iteration(pick)
+state_action_partition = homomorphism.partition_iteration(redundant_pick)
 state_partition = homomorphism.get_state_partition(state_action_partition)
 
 print("state partition:")

@@ -3,7 +3,7 @@ import os
 import copy as cp
 import numpy as np
 from envs.continuous_3 import ContinuousEnv3
-import robust_homomorphism
+from algorithms import robust_homomorphism
 import evaluation, model_utils, log_utils
 
 

@@ -1,8 +1,9 @@
 import copy as cp
 import numpy as np
+from sklearn.tree import DecisionTreeClassifier
 from envs.continuous_1 import ContinuousEnv1
-import continuous_homomorphism_knn
-import vis_utils
+from algorithms import online_homomorphism_g
+import model_utils, vis_utils
 
 
 def gather_experience(env, num):
@@ -24,6 +25,15 @@ def gather_experience(env, num):
     return transitions
 
 
+def sample_actions(state):
+
+    num = 10
+    start = 0
+    end = 2
+    actions = list(np.linspace(start, end, num=num))
+    return actions
+
+
 def visualize_state_action_partition(state_action_partition):
 
     vis_utils.plot_background(env, show=False)
@@ -38,11 +48,12 @@ def visualize_state_partition(state_partition):
 
 env = ContinuousEnv1()
 
-d = env.state_distance
-k = 10
+g = model_utils.GModel(DecisionTreeClassifier())
 
-state_action_partition, state_partition = continuous_homomorphism_knn.full_partition_iteration(
-    lambda: gather_experience(env, 200), d, k, 1,
+
+state_action_partition, state_partition = online_homomorphism_g.full_partition_iteration(
+    lambda: gather_experience(env, 400), g, sample_actions, 1,
     visualize_state_action_partition=visualize_state_action_partition,
-    visualize_state_partition=visualize_state_partition, max_iteration_steps=1
+    visualize_state_partition=visualize_state_partition,
+    max_iteration_steps=20
 )

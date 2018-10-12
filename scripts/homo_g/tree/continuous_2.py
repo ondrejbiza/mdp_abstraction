@@ -2,7 +2,7 @@ import copy as cp
 import numpy as np
 from sklearn.tree import DecisionTreeClassifier
 from envs.continuous_2 import ContinuousEnv2
-import continuous_homomorphism_g
+from algorithms import online_homomorphism_g
 import model_utils, vis_utils
 
 
@@ -54,7 +54,7 @@ env = ContinuousEnv2()
 g = model_utils.GModel(DecisionTreeClassifier())
 
 
-state_action_partition, state_partition = continuous_homomorphism_g.full_partition_iteration(
+state_action_partition, state_partition = online_homomorphism_g.full_partition_iteration(
     lambda: gather_experience(env, 400), g, sample_actions, 1,
     visualize_state_action_partition=visualize_state_action_partition,
     visualize_state_partition=visualize_state_partition,

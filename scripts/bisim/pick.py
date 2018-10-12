@@ -1,6 +1,5 @@
 import envs.pick as pick
-import bisimulation
-
+from algorithms import bisimulation
 
 partition = bisimulation.partition_iteration(pick)
 

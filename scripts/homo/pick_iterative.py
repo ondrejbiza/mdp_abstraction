@@ -1,6 +1,5 @@
 import envs.pick as pick
-import homomorphism
-
+from algorithms import homomorphism
 
 mdp = type('', (), {})()
 mdp.STATES = []

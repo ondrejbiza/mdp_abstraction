@@ -1,6 +1,5 @@
 import envs.redundant_pick as redundant_pick
-import bisimulation
-
+from algorithms import bisimulation
 
 partition = bisimulation.partition_iteration(redundant_pick)
 
