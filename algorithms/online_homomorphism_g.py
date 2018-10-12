@@ -1,3 +1,6 @@
+import algorithms.utils as utils
+
+
 class OnlineHomomorphismG:
 
     def __init__(self, experience, classifier, sample_actions, b_size_threshold, sb_size_threshold,
@@ -168,6 +171,35 @@ class OnlineHomomorphismG:
             if key not in state_partition:
                 state_partition[key] = []
             state_partition[key].append(state)
+
+        if self.sb_size_threshold > 1:
+
+            while True:
+
+                min_key, min_block = min(state_partition.items(), key=lambda x: len(x[1]))
+                min_size = len(min_block)
+
+                if min_size >= self.sb_size_threshold:
+                    break
+                else:
+
+                    # block is below threshold, add to closest block above threshold
+                    closest_key = None
+                    min_distance = None
+
+                    for key in state_partition.keys():
+
+                        # ignore self
+                        if key == min_key:
+                            continue
+
+                        distance = utils.edit_distance(list(sorted(list(min_key))), list(sorted(list(key))))
+                        if min_distance is None or min_distance > distance:
+                            min_distance = distance
+                            closest_key = key
+
+                    state_partition[closest_key] += state_partition[min_key]
+                    del state_partition[min_key]
 
         state_partition = set([frozenset(value) for value in state_partition.values()])
         return state_partition

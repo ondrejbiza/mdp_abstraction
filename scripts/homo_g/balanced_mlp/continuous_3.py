@@ -5,7 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from envs.continuous_3 import ContinuousEnv3
 from algorithms import online_homomorphism_g
-import model_utils, vis_utils
+import model_utils
+import vis_utils
 
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
@@ -46,7 +47,7 @@ def main(args):
     env = ContinuousEnv3()
     g = model_utils.BalancedMLP([1], [8, 16, 32], 0.0001, 128, 0.0001, verbose=True)
 
-    def visualize_state_action_partition(state_action_partition):
+    def visualize_b(state_action_partition):
         vis_utils.plot_background(env, show=False)
 
         xx, yy = np.meshgrid(np.arange(0, env.STATE_ACTION_MAP.shape[1], 0.01),
@@ -58,16 +59,14 @@ def main(args):
 
         vis_utils.plot_state_action_partition(state_action_partition, show=True)
 
-    def visualize_state_partition(state_partition):
+    def visualize_sb(state_partition):
         vis_utils.plot_background(env, show=False)
         vis_utils.plot_state_partition(state_partition, show=True)
 
-    online_homomorphism_g.full_partition_iteration(
-        lambda: gather_experience(env, args.num_experience), g, sample_actions, 1,
-        visualize_state_action_partition=visualize_state_action_partition,
-        visualize_state_partition=visualize_state_partition,
-        max_iteration_steps=20
-    )
+    experience = gather_experience(env, args.num_experience)
+    homo = online_homomorphism_g.OnlineHomomorphismG(experience, g, sample_actions, 1, 1, 20, visualize_b=visualize_b,
+                                                     visualize_sb=visualize_sb)
+    homo.partition_iteration()
 
 
 if __name__ == "__main__":

@@ -4,8 +4,7 @@ import log_utils
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-
-LOAD_DIR = "results/robust_homomorphism/balanced_mlp"
+LOAD_DIR = "results/homo_g/balanced_mlp"
 LOAD_FILE = "continuous_3_evaluation_1.pickle"
 LOAD_PATH = os.path.join(LOAD_DIR, LOAD_FILE)
 

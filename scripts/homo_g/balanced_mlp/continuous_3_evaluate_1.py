@@ -3,7 +3,7 @@ import os
 import copy as cp
 import numpy as np
 from envs.continuous_3 import ContinuousEnv3
-from algorithms import robust_homomorphism
+from algorithms import online_homomorphism_g
 import evaluation, model_utils, log_utils
 
 
@@ -43,12 +43,11 @@ def run(num_experience, split_threshold):
     env = ContinuousEnv3()
     g = model_utils.BalancedMLP([1], [8, 16], 0.001, 32, 0.0, verbose=True)
 
-    state_action_partition, state_partition = robust_homomorphism.full_partition_iteration(
-        lambda: gather_experience(env, num_experience), g, sample_actions, 1, split_threshold, 0,
-        max_iteration_steps=20
-    )
+    experience = gather_experience(env, num_experience)
+    homo = online_homomorphism_g.OnlineHomomorphismG(experience, g, sample_actions, split_threshold, 0, 20)
+    homo.partition_iteration()
 
-    hits, total = evaluation.overlap(env, list(state_action_partition))
+    hits, total = evaluation.overlap(env, list(homo.partition))
     accuracy = hits / total
 
     return accuracy
@@ -61,7 +60,7 @@ def main(args):
     NUM_RUNS = 50
     NUM_EXPERIENCE_LIST = [100, 200, 500, 1000, 2000, 5000]
     SPLIT_THRESHOLD_LIST = [50, 100, 200, 500]
-    SAVE_DIR = "results/robust_homomorphism/balanced_mlp"
+    SAVE_DIR = "results/homo_g/balanced_mlp"
     SAVE_FILE = "continuous_3_evaluation_1.pickle"
     SAVE_PATH = os.path.join(SAVE_DIR, SAVE_FILE)
 
@@ -88,7 +87,7 @@ def main(args):
                     continue
 
                 accuracy = run(num_experience, split_threshold)
-                results[key]= accuracy
+                results[key] = accuracy
 
                 # save results after each run
                 log_utils.write_pickle(SAVE_PATH, results)

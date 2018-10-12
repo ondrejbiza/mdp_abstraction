@@ -3,8 +3,10 @@ import os
 import copy as cp
 import numpy as np
 from envs.continuous_3 import ContinuousEnv3
-from algorithms import robust_homomorphism
-import evaluation, model_utils, vis_utils
+from algorithms import online_homomorphism_g
+import evaluation
+import model_utils
+import vis_utils
 
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
@@ -45,24 +47,24 @@ def main(args):
     env = ContinuousEnv3()
     g = model_utils.BalancedMLP([1], [8, 16], 0.001, 32, 0.0, verbose=True)
 
-    def visualize_state_action_partition(state_action_partition):
+    def visualize_b(state_action_partition):
 
         vis_utils.plot_background(env, show=False)
         vis_utils.plot_decision_boundary(g, env.STATE_ACTION_MAP.shape[1], env.STATE_ACTION_MAP.shape[0], show=False)
         vis_utils.plot_state_action_partition(state_action_partition, show=True)
 
-    def visualize_state_partition(state_partition):
+    def visualize_sb(state_partition):
 
         vis_utils.plot_background(env, show=False)
         vis_utils.plot_state_partition(state_partition, show=True)
 
-    state_action_partition, state_partition = robust_homomorphism.full_partition_iteration(
-        lambda: gather_experience(env, args.num_experience), g, sample_actions, 1, args.state_action_split_threshold,
-        args.state_split_threshold, visualize_state_action_partition=visualize_state_action_partition,
-        visualize_state_partition=visualize_state_partition, max_iteration_steps=20
-    )
+    experience = gather_experience(env, args.num_experience)
+    homo = online_homomorphism_g.OnlineHomomorphismG(experience, g, sample_actions, args.state_action_slit_threshold,
+                                                     args.state_split_threshold, 20, visualize_b=visualize_b,
+                                                     visualize_sb=visualize_sb)
+    homo.partition_iteration()
 
-    hits, total = evaluation.overlap(env, list(state_action_partition))
+    hits, total = evaluation.overlap(env, list(homo.partition))
     print("{:.2f}% accuracy ({:d}/{:d})".format((hits / total) * 100, hits, total))
 
 
