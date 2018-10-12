@@ -75,7 +75,7 @@ class GModel:
 class BalancedMLP:
 
     def __init__(self, state_shape, hiddens, learning_rate, batch_size, weight_decay, validation_fraction=0.2,
-                 momentum=0.9, balanced_sampling=True, verbose=False):
+                 momentum=0.9, oversample=True, verbose=False):
         """
         A Tensorflow neural network with dataset balancing.
         :param state_shape:                 Shape of the state.
@@ -85,7 +85,7 @@ class BalancedMLP:
         :param weight_decay:                Weight decay, applied to all parameterized layers.
         :param validation_fraction:         Fraction of data to use for validation.
         :param momentum:                    Momentum for SGD optimizer.
-        :param balanced_sampling:           Use balanced sampling of the dataset.
+        :param oversample:                  Oversample the minority classes.
         :param verbose:                     Print additional information.
         """
 
@@ -96,7 +96,7 @@ class BalancedMLP:
         self.weight_decay = weight_decay
         self.validation_fraction = validation_fraction
         self.momentum = momentum
-        self.balanced_sampling = balanced_sampling
+        self.oversample = oversample
         self.verbose = verbose
 
         self.single_class = True
@@ -249,32 +249,36 @@ class BalancedMLP:
         :return:                        None.
         """
 
-        # split dataset
-        if self.balanced_sampling:
-            train_states, train_actions, train_blocks, valid_states, valid_actions, valid_blocks = \
-                self.__balanced_split(states, actions, blocks)
-        else:
-            states, actions, blocks = shuffle(states, actions, blocks)
-            num_samples = len(states)
-            num_valid_samples = int(num_samples * self.validation_fraction)
-            valid_states = states[:num_valid_samples]
-            valid_actions = actions[:num_valid_samples]
-            valid_blocks = blocks[:num_valid_samples]
-            train_states = states[num_valid_samples:]
-            train_actions = actions[num_valid_samples:]
-            train_blocks = blocks[num_valid_samples:]
+        # create training and validation splits
+        indices = np.array(list(range(len(states))), dtype=np.int32)
+
+        train_x, train_labels, valid_x, valid_labels = stratified_split(
+            indices, blocks, self.validation_fraction
+        )
+
+        train_states = states[train_x]
+        train_actions = actions[train_x]
+        valid_states = states[valid_x]
+        valid_actions = actions[valid_x]
+
+        assert train_states.shape[0] == train_actions.shape[0] == train_labels.shape[0]
+        assert valid_states.shape[0] == valid_actions.shape[0] == valid_labels.shape[0]
+
+        # maybe balance the dataset
+        if self.oversample:
+            indices = np.array(list(range(len(train_states))), dtype=np.int32)
+
+            train_x, train_labels = oversample(indices, train_labels)
+            train_states = train_states[train_x]
+            train_actions = train_actions[train_x]
+
+            assert train_states.shape[0] == train_actions.shape[0] == train_labels.shape[0]
 
         # parameter search run
         best_accuracy = None
         best_parameters = None
 
-        if self.balanced_sampling:
-            epoch_states, epoch_actions, epoch_blocks = self.__balanced_sampling(train_states, train_actions,
-                                                                                 train_blocks)
-        else:
-            epoch_states, epoch_actions, epoch_blocks = train_states, train_actions, train_blocks
-
-        num_steps_per_epoch = len(epoch_states) // self.batch_size
+        num_steps_per_epoch = train_states.shape[0] // self.batch_size
 
         for step_idx in range(max_training_steps):
 
@@ -282,17 +286,15 @@ class BalancedMLP:
 
             if step_idx > 0 and epoch_step_idx == 0:
                 # new epoch, reshuffle dataset
-                if self.balanced_sampling:
-                    epoch_states, epoch_actions, epoch_blocks = self.__balanced_sampling(train_states, train_actions,
-                                                                                         train_blocks)
-                else:
-                    epoch_states, epoch_actions, epoch_blocks = shuffle(train_states, train_actions, train_blocks)
+                train_states, train_actions, train_labels = shuffle(
+                    train_states, train_actions, train_labels
+                )
 
             feed_dict = {
-                self.states_pl: epoch_states[epoch_step_idx * self.batch_size:(epoch_step_idx + 1) * self.batch_size],
-                self.actions_pl: epoch_actions[epoch_step_idx * self.batch_size:
+                self.states_pl: train_states[epoch_step_idx * self.batch_size:(epoch_step_idx + 1) * self.batch_size],
+                self.actions_pl: train_actions[epoch_step_idx * self.batch_size:
                                                (epoch_step_idx + 1) * self.batch_size],
-                self.labels_pl: epoch_blocks[epoch_step_idx * self.batch_size:(epoch_step_idx + 1) * self.batch_size]
+                self.labels_pl: train_labels[epoch_step_idx * self.batch_size:(epoch_step_idx + 1) * self.batch_size]
             }
 
             self.session.run(self.train_step, feed_dict=feed_dict)
@@ -302,13 +304,13 @@ class BalancedMLP:
                 unbalanced_accuracy, logits = self.session.run([self.accuracy, self.logits], feed_dict={
                     self.states_pl: valid_states,
                     self.actions_pl: valid_actions,
-                    self.labels_pl: valid_blocks
+                    self.labels_pl: valid_labels
                 })
 
                 class_accuracies = []
                 for class_idx in range(self.num_classes):
                     class_accuracy = np.mean(
-                        (np.argmax(logits[valid_blocks == class_idx], axis=1) == class_idx).astype(np.float32))
+                        (np.argmax(logits[valid_labels == class_idx], axis=1) == class_idx).astype(np.float32))
                     class_accuracies.append(class_accuracy)
                 balanced_accuracy = np.mean(class_accuracies)
 
@@ -326,102 +328,12 @@ class BalancedMLP:
                         for class_idx in range(self.num_classes):
                             print("class {:d} accuracy: {:.2f}%, num train samples: {:d}, num valid samples: {:d}"
                                   .format(class_idx + 1, class_accuracies[class_idx] * 100,
-                                          np.sum(train_blocks == class_idx), np.sum(valid_blocks == class_idx))
+                                          np.sum(train_labels == class_idx), np.sum(valid_labels == class_idx))
                                   )
 
         # set the best parameters
         for idx, variable in enumerate(tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)):
             self.session.run(variable.assign(best_parameters[idx]))
-
-    def __get_min_samples_per_class(self, blocks):
-        """
-        Get minimum number of samples.
-        :param blocks:      List of blocks.
-        :return:            Number of samples in the smallest block.
-        """
-
-        min_samples = None
-
-        for class_idx in range(self.num_classes):
-
-            num_samples = np.sum(blocks == class_idx)
-            if min_samples is None or num_samples < min_samples:
-                min_samples = num_samples
-
-        return min_samples
-
-    def __balanced_split(self, states, actions, blocks):
-        """
-        Create a stratified sample of a validation set.
-        :param states:                  List of states.
-        :param actions:                 List of actions.
-        :param blocks:                  Indexes of state-action blocks the state-action pairs transition to.
-        :return:                        Training and validation sets.
-        """
-
-        states, actions, blocks = shuffle(states, actions, blocks)
-
-        train_states = []
-        train_actions = []
-        train_blocks = []
-        valid_states = []
-        valid_actions = []
-        valid_blocks = []
-
-        for class_idx in range(self.num_classes):
-            mask = blocks == class_idx
-            validation_size = int(np.sum(mask) * self.validation_fraction)
-            assert validation_size > 0
-
-            valid_states.append(states[mask][:validation_size])
-            valid_actions.append(actions[mask][:validation_size])
-            valid_blocks.append(blocks[mask][:validation_size])
-            train_states.append(states[mask][validation_size:])
-            train_actions.append(actions[mask][validation_size:])
-            train_blocks.append(blocks[mask][validation_size:])
-
-        valid_states = np.concatenate(valid_states, axis=0)
-        valid_actions = np.concatenate(valid_actions, axis=0)
-        valid_blocks = np.concatenate(valid_blocks, axis=0)
-        train_states = np.concatenate(train_states, axis=0)
-        train_actions = np.concatenate(train_actions, axis=0)
-        train_blocks = np.concatenate(train_blocks, axis=0)
-
-        return train_states, train_actions, train_blocks, valid_states, valid_actions, valid_blocks
-
-    def __balanced_sampling(self, states, actions, blocks):
-        """
-        Create a balanced sample.
-        :param states:                  List of states.
-        :param actions:                 List of actions.
-        :param blocks:                  Indexes of state-action blocks the state-action pairs transition to.
-        :return:                        A balanced training sample.
-        """
-
-        min_samples = self.__get_min_samples_per_class(blocks)
-
-        if min_samples < self.batch_size:
-            raise ValueError("Minimum number of samples ({:d}) is smaller than batch size.".format(min_samples))
-
-        states, actions, blocks = shuffle(states, actions, blocks)
-
-        sampled_states = []
-        sampled_actions = []
-        sampled_blocks = []
-
-        for class_idx in range(self.num_classes):
-
-            mask = blocks == class_idx
-
-            sampled_states.append(states[mask][:min_samples])
-            sampled_actions.append(actions[mask][:min_samples])
-            sampled_blocks.append(blocks[mask][:min_samples])
-
-        sampled_states = np.concatenate(sampled_states, axis=0)
-        sampled_actions = np.concatenate(sampled_actions, axis=0)
-        sampled_blocks = np.concatenate(sampled_blocks, axis=0)
-
-        return shuffle(sampled_states, sampled_actions, sampled_blocks)
 
     def __start_session(self):
         """
@@ -457,3 +369,99 @@ def get_weight_regularizer(weight_decay):
     :return:                Regularizer object.
     """
     return tf.contrib.layers.l2_regularizer(weight_decay)
+
+
+def get_min_and_max_samples_per_class(y):
+    """
+    Get number of samples for the class with the least and the most samples.
+    :param y:       Class indexes for each training sample.
+    :return:        Minimum and maximum number of samples.
+    """
+
+    min_samples = None
+    max_samples = None
+    num_classes = np.max(y) + 1
+
+    for class_idx in range(num_classes):
+
+        num_samples = np.sum(y == class_idx)
+
+        if min_samples is None or num_samples < min_samples:
+            min_samples = num_samples
+
+        if max_samples is None or num_samples > max_samples:
+            max_samples = num_samples
+
+    return min_samples, max_samples
+
+
+def oversample(x, y):
+    """
+    Oversample the data.
+    :param x:       Data.
+    :param y:       Labels.
+    :return:        Oversampled data.
+    """
+
+    _, max_samples = get_min_and_max_samples_per_class(y)
+    num_classes = np.max(y) + 1
+
+    x, y = shuffle(x, y)
+
+    sampled_x = []
+    sampled_y = []
+
+    for class_idx in range(num_classes):
+
+        mask = y == class_idx
+
+        if np.sum(mask) == max_samples:
+
+            sampled_x.append(x[mask])
+            sampled_y.append(y[mask])
+
+        else:
+
+            sampled_x.append(np.random.choice(x[mask], size=max_samples, replace=True))
+            sampled_y.append(np.random.choice(y[mask], size=max_samples, replace=True))
+
+    sampled_x = np.concatenate(sampled_x, axis=0)
+    sampled_y = np.concatenate(sampled_y, axis=0)
+
+    return shuffle(sampled_x, sampled_y)
+
+
+def stratified_split(x, y, validation_fraction):
+    """
+    Create a stratified training and validation split.
+    :param x:       Training data.
+    :param y:       Training labels.
+    :param validation_fraction:         Validation fraction.
+    :return:                            Training and validation splits.
+    """
+
+    num_classes = np.max(y) + 1
+    x, y = shuffle(x, y)
+
+    valid_x = []
+    valid_y = []
+    train_x = []
+    train_y = []
+
+    for class_idx in range(num_classes):
+        mask = y == class_idx
+
+        validation_size = int(np.sum(mask) * validation_fraction)
+        assert validation_size > 0
+
+        valid_x.append(x[mask][:validation_size])
+        valid_y.append(y[mask][:validation_size])
+        train_x.append(x[mask][validation_size:])
+        train_y.append(y[mask][validation_size:])
+
+    valid_x = np.concatenate(valid_x, axis=0)
+    valid_y = np.concatenate(valid_y, axis=0)
+    train_x = np.concatenate(train_x, axis=0)
+    train_y = np.concatenate(train_y, axis=0)
+
+    return train_x, train_y, valid_x, valid_y
