@@ -67,6 +67,7 @@ class OnlineHomomorphismGDict:
         """
 
         new_blocks = collections.defaultdict(list)
+        reward_blocks = collections.defaultdict(list)
 
         # get all experience
         experience = []
@@ -79,15 +80,18 @@ class OnlineHomomorphismGDict:
         # split experience based on next state blocks
         for state, action, reward, next_state, done in experience:
 
-            sampled_actions = self.sample_actions(state)
-            blocks = set()
+            if reward > 0:
+                reward_blocks[reward].append((state, action, reward, next_state, done))
+            else:
+                sampled_actions = self.sample_actions(state)
+                blocks = set()
 
-            for sampled_action in sampled_actions:
-                blocks.add(self.classifier.predict(state, sampled_action))
+                for sampled_action in sampled_actions:
+                    blocks.add(self.classifier.predict(next_state, sampled_action))
 
-            key = frozenset(blocks)
+                key = frozenset(blocks)
 
-            new_blocks[key].append((state, action, reward, next_state, done))
+                new_blocks[key].append((state, action, reward, next_state, done))
 
         # resolve outlier state blocks
         if self.b_size_threshold > 1:
@@ -143,7 +147,10 @@ class OnlineHomomorphismGDict:
 
         # create a new partition
         new_partition = set([frozenset(value) for value in new_blocks.values()])
-        change = new_partition == self.partition
+        for block in reward_blocks.values():
+            new_partition.add(frozenset(block))
+
+        change = new_partition != self.partition
         self.partition = new_partition
 
         return change
