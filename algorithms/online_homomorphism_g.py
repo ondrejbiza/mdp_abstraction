@@ -1,190 +1,173 @@
-import copy as cp
+class OnlineHomomorphismG:
 
+    def __init__(self, experience, classifier, sample_actions, b_size_threshold, sb_size_threshold,
+                 max_partition_iteration_steps, visualize_b=None, visualize_sb=None):
 
-def split(state_action_block, state_block, partition):
-    """
-    Split a state-action block with respect to a state block.
-    :param state_action_block:      State-action block.
-    :param state_block:             State block.
-    :param partition:               State-action partition.
-    :return:                        New state-action partition with possibly more blocks.
-    """
+        self.partition = {frozenset(experience)}
+        self.classifier = classifier
+        self.sample_actions = sample_actions
 
-    partition = cp.deepcopy(partition)
-    partition.remove(state_action_block)
+        self.b_size_threshold = b_size_threshold
+        self.sb_size_threshold = sb_size_threshold
+        self.max_partition_iteration_steps = max_partition_iteration_steps
+        self.visualize_b = visualize_b
+        self.visualize_sb = visualize_sb
 
-    new_blocks = {}
-    for state, action, reward, next_state, done in state_action_block:
+        self.reward_block = None
 
-        key = (reward, next_state in state_block)
+    def partition_iteration(self):
+        """
+        Run partition iteration.
+        :return:    Number of partition iteration steps until the algorithm converged or a maximum steps threshold
+                    was reached.
+        """
 
-        if key not in new_blocks.keys():
-            new_blocks[key] = []
+        step = 0
+        change = True
 
-        new_blocks[key].append((state, action, reward, next_state, done))
+        while change and step < self.max_partition_iteration_steps:
 
-    for new_block in new_blocks.values():
-        partition.add(frozenset(new_block))
+            if step == 0:
+                change = self.__split_rewards()
+                self.__train_classifier()
+            else:
+                change = self.__partition_improvement()
 
-    return partition
+            step += 1
 
+            if self.visualize_sb is not None:
+                print("step {:d} state partition:".format(step))
+                state_partition = self.__state_projection()
+                self.visualize_sb(state_partition)
 
-def train_classifier(state_action_partition, classifier):
-    """
-    Train a model to classify state-action pairs into blocks in state-action partition.
-    :param state_action_partition:          State-action partition.
-    :param classifier:                      Classifier.
-    :return:                                None.
-    """
+            if self.visualize_b is not None:
+                print("step {:d} state-action partition:".format(step))
+                self.visualize_b(self.partition)
 
-    classifier.fit(state_action_partition)
+        return step
 
+    def __partition_improvement(self):
+        """
+        Run a single step of partition improvement.
+        :return:                True if the partition changed, False otherwise.
+        """
 
-def get_state_partition(state_action_partition, classifier, sample_actions):
-    """
-    Get a state partition from a state-action partition using a state-action classifier.
-    :param state_action_partition:      State-action partition.
-    :param classifier:                  Classifier.
-    :param sample_actions:              Function that samples actions.
-    :return:                            State partition.
-    """
+        state_partition = self.__state_projection()
+        change = False
 
-    states = set()
-    for block in state_action_partition:
-        for state, action, reward, next_state, done in block:
-            states.add(state)
-            states.add(next_state)
+        for state_block in state_partition:
 
-    state_partition = {}
+            flag = True
 
-    for state in states:
-        actions = sample_actions(state)
-        blocks = set()
-        for action in actions:
-            blocks.add(classifier.predict(state, action))
-        key = frozenset(blocks)
-        if key not in state_partition:
-            state_partition[key] = []
-        state_partition[key].append(state)
+            while flag:
 
-    state_partition = set([frozenset(value) for value in state_partition.values()])
-    return state_partition
+                for new_block in self.partition:
 
+                    if self.__split(new_block, state_block):
+                        change = True
+                        break
 
-def partition_improvement(partition, classifier, sample_actions, visualize_state_action_partition=None):
-    """
-    Run a single step of partition improvement.
-    :param partition:                               State-action partition.
-    :param classifier:                              State-action classifier.
-    :param sample_actions:                          Function for sampling actions.
-    :param visualize_state_action_partition:        Visualize state-action partition.
-    :return:                                        Improved state action partition.
-    """
+                    flag = False
 
-    new_partition = cp.deepcopy(partition)
-    state_partition = get_state_partition(new_partition, classifier, sample_actions)
+        self.__train_classifier()
+        return change
 
-    for state_block in state_partition:
+    def __split(self, state_action_block, state_block):
+        """
+        Split a state-action block with respect to a state block.
+        :param state_action_block:      State-action block.
+        :param state_block:             State block.
+        :return:                        True if the state-action partition changed, otherwise False.
+        """
 
-        flag = True
+        new_blocks = {
+            True: [],
+            False: []
+        }
 
-        while flag:
+        for state, action, reward, next_state, done in state_action_block:
 
-            flag = False
+            # don't split reward blocks
+            if reward > 0:
+                return False
 
-            for new_block in new_partition:
+            key = next_state in state_block
+            new_blocks[key].append((state, action, reward, next_state, done))
 
-                tmp_new_partition = split(new_block, state_block, new_partition)
+        if len(new_blocks[True]) >= self.b_size_threshold and len(new_blocks[False]) >= self.b_size_threshold:
 
-                if new_partition != tmp_new_partition:
+            self.partition.remove(state_action_block)
+            self.__add_blocks(new_blocks.values())
 
-                    new_partition = tmp_new_partition
+            return True
 
-                    if visualize_state_action_partition is not None:
-                        print("split:")
-                        visualize_state_action_partition(new_partition)
+        return False
 
-                    flag = True
-                    break
+    def __split_rewards(self):
+        """
+        Split experience based on the observed rewards. Assumes there is only one state-action block.
+        :return:            True if the state-action partition changed, otherwise False.
+        """
 
-    train_classifier(new_partition, classifier)
+        assert len(self.partition) == 1
 
-    return new_partition
+        new_blocks = {}
 
+        for state, action, reward, next_state, done in list(self.partition)[0]:
 
-def partition_iteration(partition, classifier, sample_actions, max_steps=2, visualize_state_action_partition=None):
-    """
-    Run partition iteration.
-    :param partition:                                   Initial partition.
-    :param classifier:                                  State-action classifier.
-    :param sample_actions:                              Sample actions function.
-    :param max_steps:                                   Maximum number of partition iteration steps.
-    :param visualize_state_action_partition:            Visualize state-action partition.
-    :return:                                            New state-action partition.
-    """
+            if reward not in new_blocks:
+                new_blocks[reward] = []
 
-    new_partition = partition_improvement(
-        partition, classifier, sample_actions, visualize_state_action_partition=visualize_state_action_partition
-    )
-    step = 1
+            new_blocks[reward].append((state, action, reward, next_state, done))
 
-    while partition != new_partition and step < max_steps:
+        self.partition = set()
+        self.__add_blocks(new_blocks.values())
 
-        partition = new_partition
-        new_partition = partition_improvement(
-            partition, classifier, sample_actions, visualize_state_action_partition=visualize_state_action_partition
-        )
+        return len(self.partition) > 1
 
-        step += 1
+    def __add_blocks(self, new_blocks):
+        """
+        Add state-action blocks to the state-action partition.
+        :param new_blocks:      List of state-action blocks.
+        :return:
+        """
 
-    return new_partition
+        for new_block in new_blocks:
 
+            if len(new_block) > 0:
+                self.partition.add(frozenset(new_block))
 
-def full_partition_iteration(gather_experience, classifier, sample_actions, num_steps,
-                             visualize_state_action_partition=None, visualize_state_partition=None,
-                             max_iteration_steps=2):
-    """
-    Run the Full Partition Iteration algorithm.
-    :param gather_experience:                       Gather experience function.
-    :param classifier:                              State-action classifier.
-    :param sample_actions:                          Sample actions function.
-    :param num_steps:                               Number of steps.
-    :param visualize_state_action_partition:        Visualize state-action partition.
-    :param visualize_state_partition:               Visualize state partition.
-    :param max_iteration_steps:                     Maximum number of partition improvement steps.
-    :return:                                        State-action partition and state partition.
-    """
+    def __train_classifier(self):
+        """
+        Train a model to classify state-action pairs into blocks in state-action partition.
+        :return:                                None.
+        """
 
-    state_action_partition = set()
-    all_experience = []
+        self.classifier.fit(self.partition)
 
-    for step in range(num_steps):
+    def __state_projection(self):
+        """
+        Get a state partition from a state-action partition using a state-action classifier.
+        :return:                            State partition.
+        """
 
-        # add experience
-        all_experience += gather_experience()
-        state_action_partition = {frozenset(all_experience)}
+        states = set()
+        for block in self.partition:
+            for state, action, reward, next_state, done in block:
+                states.add(state)
+                states.add(next_state)
 
-        # visualize added experience
-        if visualize_state_action_partition is not None:
-            visualize_state_action_partition(state_action_partition)
+        state_partition = {}
 
-        # rearrange partition
-        state_action_partition = partition_iteration(
-            state_action_partition, classifier, sample_actions,
-            visualize_state_action_partition=visualize_state_action_partition, max_steps=max_iteration_steps
-        )
+        for state in states:
+            actions = self.sample_actions(state)
+            blocks = set()
+            for action in actions:
+                blocks.add(self.classifier.predict(state, action))
+            key = frozenset(blocks)
+            if key not in state_partition:
+                state_partition[key] = []
+            state_partition[key].append(state)
 
-        # visualize rearranged partition
-        if visualize_state_action_partition is not None:
-            print("step {:d} state-action partition:".format(step + 1))
-            visualize_state_action_partition(state_action_partition)
-
-        # visualize state partition
-        if visualize_state_partition is not None:
-            print("step {:d} state partition:".format(step + 1))
-            state_partition = get_state_partition(state_action_partition, classifier, sample_actions)
-            visualize_state_partition(state_partition)
-
-    state_partition = get_state_partition(state_action_partition, classifier, sample_actions)
-
-    return state_action_partition, state_partition
+        state_partition = set([frozenset(value) for value in state_partition.values()])
+        return state_partition

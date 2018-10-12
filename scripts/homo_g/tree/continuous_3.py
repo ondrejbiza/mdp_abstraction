@@ -42,22 +42,20 @@ def main(args):
 
     env = ContinuousEnv3()
 
-    def visualize_state_action_partition(state_action_partition):
+    def visualize_b(state_action_partition):
         vis_utils.plot_background(env, show=False)
         vis_utils.plot_state_action_partition(state_action_partition, show=True)
 
-    def visualize_state_partition(state_partition):
+    def visualize_sb(state_partition):
         vis_utils.plot_background(env, show=False)
         vis_utils.plot_state_partition(state_partition, show=True)
 
     g = model_utils.GModel(DecisionTreeClassifier())
 
-    online_homomorphism_g.full_partition_iteration(
-        lambda: gather_experience(env, args.num_experience), g, sample_actions, 1,
-        visualize_state_action_partition=visualize_state_action_partition,
-        visualize_state_partition=visualize_state_partition,
-        max_iteration_steps=20
-    )
+    experience = gather_experience(env, args.num_experience)
+    homo = online_homomorphism_g.OnlineHomomorphismG(experience, g, sample_actions, 1, 1, 20, visualize_b=visualize_b,
+                                                     visualize_sb=visualize_sb)
+    homo.partition_iteration()
 
 
 if __name__ == "__main__":
