@@ -8,7 +8,7 @@ LOAD_DIR = "results/homo_g_dict/balanced_mlp"
 LOAD_FILE = "experiment_1_thresholds.pickle"
 LOAD_PATH = os.path.join(LOAD_DIR, LOAD_FILE)
 
-NUM_RUNS = 50
+NUM_RUNS = 200
 NUM_EXPERIENCE_LIST = [200, 500, 1000]
 SPLIT_THRESHOLD_LIST = [50, 100, 200]
 
