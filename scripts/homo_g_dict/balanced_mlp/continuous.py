@@ -3,7 +3,6 @@ import os
 import copy as cp
 import numpy as np
 import matplotlib.pyplot as plt
-
 from algorithms.online_homomorphism_g_dict import OnlineHomomorphismGDict
 import model_utils
 import vis_utils
