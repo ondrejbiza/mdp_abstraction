@@ -111,6 +111,8 @@ class OnlineHomomorphismGDict:
         flag = True
         while len(new_blocks) > 1 and flag:
 
+            flag = False
+
             # compute adaptive threshold
             num_samples = len(experience)
             thresholds = {}
@@ -175,10 +177,8 @@ class OnlineHomomorphismGDict:
                         del new_blocks[current_key]
                         del confidences[current_key]
 
+                    flag = True
                     break
-
-                # all blocks are larger than the thresholds, stop
-                flag = False
 
         # create a new partition
         new_partition = set([frozenset(value) for value in new_blocks.values()])
