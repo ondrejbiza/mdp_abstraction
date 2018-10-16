@@ -163,7 +163,7 @@ class BalancedMLP:
             self.single_class = True
         else:
             self.single_class = False
-            self.__retrain(states, actions, blocks)
+            return self.__retrain(states, actions, blocks)
 
     def __retrain(self, states, actions, blocks):
         """
@@ -194,7 +194,7 @@ class BalancedMLP:
         self.__start_session()
 
         # train network
-        self.__train_network(states, actions, blocks)
+        return self.__train_network(states, actions, blocks)
 
     def __build_placeholders(self):
         """
@@ -276,6 +276,7 @@ class BalancedMLP:
 
         # parameter search run
         best_accuracy = None
+        best_per_class_accuracy = None
         best_parameters = None
 
         num_steps_per_epoch = train_states.shape[0] // self.batch_size
@@ -317,6 +318,7 @@ class BalancedMLP:
                 if best_accuracy is None or balanced_accuracy > best_accuracy:
 
                     best_accuracy = balanced_accuracy
+                    best_per_class_accuracy = class_accuracies
                     best_parameters = self.session.run(tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES))
 
                     if self.verbose:
@@ -334,6 +336,8 @@ class BalancedMLP:
         # set the best parameters
         for idx, variable in enumerate(tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)):
             self.session.run(variable.assign(best_parameters[idx]))
+
+        return best_per_class_accuracy
 
     def __start_session(self):
         """
