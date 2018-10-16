@@ -6,7 +6,7 @@ from envs.continuous_3 import ContinuousEnv3
 from algorithms.online_homomorphism_g_dict import OnlineHomomorphismGDict
 import evaluation, model_utils, log_utils
 
-NUM_RUNS = 50
+NUM_RUNS = 200
 NUM_EXPERIENCE_LIST = [200, 500, 1000]
 SPLIT_THRESHOLD_LIST = [50, 100, 200]
 SAVE_DIR = "results/homo_g_dict/balanced_mlp"
