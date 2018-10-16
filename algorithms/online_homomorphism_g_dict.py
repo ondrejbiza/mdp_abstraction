@@ -138,7 +138,7 @@ class OnlineHomomorphismGDict:
                         # add to a randomly selected block
                         keys = list(new_blocks.keys())
                         keys.remove(min_key)
-                        rand_key = random.choice(new_blocks.keys())
+                        rand_key = random.choice(list(new_blocks.keys()))
 
                         new_blocks[rand_key] += new_blocks[min_key]
                         del new_blocks[min_key]
