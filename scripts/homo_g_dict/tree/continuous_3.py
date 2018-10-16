@@ -3,7 +3,7 @@ import copy as cp
 import numpy as np
 from sklearn.tree import DecisionTreeClassifier
 from envs.continuous_3 import ContinuousEnv3
-from algorithms import online_homomorphism_g_dict
+from algorithms.online_homomorphism_g_dict import OnlineHomomorphismGDict
 import model_utils, vis_utils
 
 
@@ -49,8 +49,8 @@ def main(args):
     g = model_utils.GModel(DecisionTreeClassifier())
 
     experience = gather_experience(env, args.num_experience)
-    homo = online_homomorphism_g_dict.OnlineHomomorphismGDict(experience, g, sample_actions, 1, 1, 20,
-                                                              visualize_b=visualize_b)
+    homo = OnlineHomomorphismGDict(experience, g, sample_actions, 1, OnlineHomomorphismGDict.RESOLVE_ADD_CLOSEST, 20,
+                                   visualize_b=visualize_b)
     homo.partition_iteration()
 
 
