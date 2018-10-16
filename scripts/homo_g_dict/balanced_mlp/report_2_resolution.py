@@ -33,7 +33,6 @@ for i, resolution in enumerate(RESOLUTION_LIST):
         print(resolution, mean_accuracy)
         results_array[i] = mean_accuracy
 
-sns.barplot(results_array)
-plt.xlabel("split threshold for state-action blocks")
-plt.ylabel("num experience")
+sns.barplot(["ignore", "add to closest", "add to random", "add to biggest"], results_array)
+plt.ylabel("accuracy")
 plt.show()
