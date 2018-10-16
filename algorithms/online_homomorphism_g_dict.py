@@ -57,7 +57,10 @@ class OnlineHomomorphismGDict:
         """
 
         change = self.__split()
-        self.__train_classifier()
+
+        if change:
+            self.__train_classifier()
+
         return change
 
     def __split(self):
@@ -150,8 +153,10 @@ class OnlineHomomorphismGDict:
         for block in reward_blocks.values():
             new_partition.add(frozenset(block))
 
-        change = new_partition != self.partition
-        self.partition = new_partition
+        change = len(new_partition) > len(self.partition)
+
+        if change:
+            self.partition = new_partition
 
         return change
 
