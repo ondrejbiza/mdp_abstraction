@@ -52,7 +52,7 @@ def run(num_experience, split_threshold):
 
     experience = gather_experience(env, num_experience)
     homo = OnlineHomomorphismGDict(experience, g, sample_actions, split_threshold,
-                                   OnlineHomomorphismGDict.RESOLVE_ADD_CLOSEST, 20)
+                                   OnlineHomomorphismGDict.RESOLVE_IGNORE, 20)
     homo.partition_iteration()
 
     hits, total = evaluation.overlap(env, list(homo.partition))
