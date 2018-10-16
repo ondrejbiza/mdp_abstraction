@@ -98,7 +98,7 @@ class OnlineHomomorphismGDict:
 
         # resolve outlier state blocks
         if self.b_size_threshold > 1:
-            while True:
+            while len(new_blocks) > 1:
 
                 min_key, min_block = min(new_blocks.items(), key=lambda x: len(x[1]))
                 min_size = len(min_block)
