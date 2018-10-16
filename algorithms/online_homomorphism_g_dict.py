@@ -145,7 +145,7 @@ class OnlineHomomorphismGDict:
 
                     else:
                         # ignore the misclassified experience
-                        self.ignored += new_blocks[min_key]
+                        self.ignored.union(new_blocks[min_key])
                         del new_blocks[min_key]
 
         # create a new partition
