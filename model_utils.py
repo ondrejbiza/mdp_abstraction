@@ -268,7 +268,7 @@ class BalancedMLP:
         if self.oversample:
             indices = np.array(list(range(len(train_states))), dtype=np.int32)
 
-            train_x, train_labels = oversample(indices, train_labels)
+            train_x, train_labels = oversample(indices, train_labels, min_samples=self.batch_size)
             train_states = train_states[train_x]
             train_actions = train_actions[train_x]
 
@@ -399,15 +399,20 @@ def get_min_and_max_samples_per_class(y):
     return min_samples, max_samples
 
 
-def oversample(x, y):
+def oversample(x, y, min_samples=None):
     """
     Oversample the data.
-    :param x:       Data.
-    :param y:       Labels.
-    :return:        Oversampled data.
+    :param x:                   Data.
+    :param y:                   Labels.
+    :param min_samples:         Minimum number of samples per class.
+    :return:                    Oversampled data.
     """
 
     _, max_samples = get_min_and_max_samples_per_class(y)
+
+    if min_samples is not None:
+        max_samples = max(max_samples, min_samples)
+
     num_classes = np.max(y) + 1
 
     x, y = shuffle(x, y)
