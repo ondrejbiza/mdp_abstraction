@@ -6,7 +6,7 @@ from envs.continuous_3 import ContinuousEnv3
 from algorithms.online_homomorphism_g_dict_adapt import OnlineHomomorphismGDict
 import evaluation, model_utils, log_utils
 
-NUM_RUNS = 50
+NUM_RUNS = 200
 NUM_EXPERIENCE_LIST = [200, 500, 1000]
 THRESHOLD_MULTIPLIER_LIST = [0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5]
 MINIMUM_THRESHOLD = 10
