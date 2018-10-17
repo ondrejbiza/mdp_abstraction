@@ -10,7 +10,7 @@ LOAD_PATH = os.path.join(LOAD_DIR, LOAD_FILE)
 
 NUM_RUNS = 200
 NUM_EXPERIENCE_LIST = [200, 500, 1000]
-SPLIT_THRESHOLD_LIST = [50, 100, 200]
+SPLIT_THRESHOLD_LIST = [10, 20, 30, 50, 100, 200]
 
 results = log_utils.read_pickle(LOAD_PATH)
 results_array = np.zeros((len(NUM_EXPERIENCE_LIST), len(SPLIT_THRESHOLD_LIST)))

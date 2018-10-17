@@ -8,7 +8,7 @@ import evaluation, model_utils, log_utils
 
 NUM_RUNS = 200
 NUM_EXPERIENCE_LIST = [200, 500, 1000]
-SPLIT_THRESHOLD_LIST = [20, 30, 50, 100, 200]
+SPLIT_THRESHOLD_LIST = [10, 20, 30, 50, 100, 200]
 SAVE_DIR = "results/homo_g_dict/balanced_mlp"
 SAVE_FILE = "experiment_1_thresholds.pickle"
 SAVE_PATH = os.path.join(SAVE_DIR, SAVE_FILE)
