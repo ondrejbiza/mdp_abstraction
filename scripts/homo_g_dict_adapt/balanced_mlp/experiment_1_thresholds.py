@@ -8,7 +8,7 @@ import evaluation, model_utils, log_utils
 
 NUM_RUNS = 50
 NUM_EXPERIENCE_LIST = [200, 500, 1000]
-THRESHOLD_MULTIPLIER_LIST = [0.5, 0.75, 1.0, 1.25, 1.5]
+THRESHOLD_MULTIPLIER_LIST = [0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5]
 MINIMUM_THRESHOLD = 50
 SAVE_DIR = "results/homo_g_dict_adapt/balanced_mlp"
 SAVE_FILE = "experiment_1_thresholds.pickle"
