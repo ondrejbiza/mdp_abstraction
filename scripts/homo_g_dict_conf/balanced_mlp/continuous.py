@@ -66,10 +66,17 @@ def main(args):
 
         vis_utils.plot_state_action_partition(state_action_partition, show=True)
 
+    def visualize_ignored(states):
+
+        vis_utils.plot_background(env, show=False)
+
+        plt.hist(states, bins=10, range=[0, len(env.STATE_MAP)], normed=True)
+        plt.show()
+
     experience = gather_experience(env, args.num_experience)
     homo = OnlineHomomorphismGDict(experience, g, sample_actions, args.b_threshold, args.min_conf,
                                    OnlineHomomorphismGDict.RESOLVE_ADD_CLOSEST, 20, visualize_b=visualize_b,
-                                   visualize_conf=vis_utils.show_confidences, visualize_ignored=True)
+                                   visualize_conf=vis_utils.show_confidences, visualize_ignored=visualize_ignored)
     homo.partition_iteration()
 
 

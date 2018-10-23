@@ -14,7 +14,7 @@ class OnlineHomomorphismGDict:
 
     def __init__(self, experience, classifier, sample_actions, b_size_threshold, b_min_conf,
                  outlier_resolution, max_partition_iteration_steps, visualize_b=None,
-                 visualize_conf=None, visualize_ignored=False):
+                 visualize_conf=None, visualize_ignored=None):
 
         self.partition = {frozenset(experience)}
         self.classifier = classifier
@@ -57,13 +57,6 @@ class OnlineHomomorphismGDict:
             if self.visualize_conf is not None:
                 self.visualize_conf(self.partition, self.classifier, self.sample_actions)
 
-            if self.visualize_ignored:
-                next_states = []
-                for transition in self.ignored:
-                    next_states.append(transition[3])
-                plt.hist(next_states, bins=10)
-                plt.show()
-
         return step
 
     def __partition_improvement(self):
@@ -75,6 +68,13 @@ class OnlineHomomorphismGDict:
         change = self.__split()
 
         if change:
+
+            if self.visualize_ignored is not None:
+                next_states = []
+                for transition in self.ignored:
+                    next_states.append(transition[3])
+                self.visualize_ignored(next_states)
+
             self.__train_classifier()
 
         return change
