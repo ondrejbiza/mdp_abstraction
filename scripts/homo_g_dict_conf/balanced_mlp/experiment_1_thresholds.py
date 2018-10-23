@@ -3,7 +3,7 @@ import os
 import copy as cp
 import numpy as np
 from envs.continuous_3 import ContinuousEnv3
-from algorithms.online_homomorphism_g_dict import OnlineHomomorphismGDict
+from algorithms.online_homomorphism_g_dict_conf import OnlineHomomorphismGDict
 import evaluation, model_utils, log_utils
 
 NUM_RUNS = 50
@@ -46,13 +46,13 @@ def sample_actions(state):
     return actions
 
 
-def run(num_experience, split_threshold):
+def run(num_experience, split_threshold, min_confidence):
 
     env = ContinuousEnv3()
     g = model_utils.BalancedMLP([1], [8, 16], 0.001, 32, 0.0, verbose=True)
 
     experience = gather_experience(env, num_experience)
-    homo = OnlineHomomorphismGDict(experience, g, sample_actions, split_threshold,
+    homo = OnlineHomomorphismGDict(experience, g, sample_actions, split_threshold, min_confidence,
                                    OnlineHomomorphismGDict.RESOLVE_IGNORE, 20)
     homo.partition_iteration()
 
@@ -80,19 +80,21 @@ def main(args):
 
         for split_threshold in SPLIT_THRESHOLD_LIST:
 
-            for run_idx in range(NUM_RUNS):
+            for min_conf in CONF_THRESHOLD_LIST:
 
-                key = (num_experience, split_threshold, run_idx)
+                for run_idx in range(NUM_RUNS):
 
-                # skip if this setting is already in results
-                if key in results:
-                    continue
+                    key = (num_experience, split_threshold, min_conf, run_idx)
 
-                accuracy = run(num_experience, split_threshold)
-                results[key] = accuracy
+                    # skip if this setting is already in results
+                    if key in results:
+                        continue
 
-                # save results after each run
-                log_utils.write_pickle(SAVE_PATH, results)
+                    accuracy = run(num_experience, split_threshold, min_conf)
+                    results[key] = accuracy
+
+                    # save results after each run
+                    log_utils.write_pickle(SAVE_PATH, results)
 
 
 if __name__ == "__main__":
