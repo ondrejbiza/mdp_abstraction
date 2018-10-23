@@ -12,8 +12,8 @@ class OnlineHomomorphismGDict:
     RESOLVE_ADD_TO_BIGGEST = 2
     RESOLVE_ADD_TO_RANDOM = 3
 
-    def __init__(self, experience, classifier, sample_actions, b_size_threshold, b_min_conf,
-                 outlier_resolution, max_partition_iteration_steps, visualize_b=None,
+    def __init__(self, experience, classifier, sample_actions, b_size_threshold, conf_threshold,
+                 outlier_resolution, max_partition_iteration_steps, percentile=None, visualize_b=None,
                  visualize_conf=None, visualize_ignored=None):
 
         self.partition = {frozenset(experience)}
@@ -21,9 +21,11 @@ class OnlineHomomorphismGDict:
         self.sample_actions = sample_actions
 
         self.b_size_threshold = b_size_threshold
-        self.b_min_conf = b_min_conf
+        self.conf_threshold = conf_threshold
         self.outlier_resolution = outlier_resolution
         self.max_partition_iteration_steps = max_partition_iteration_steps
+        self.percentile = percentile
+
         self.visualize_b = visualize_b
         self.visualize_conf = visualize_conf
         self.visualize_ignored = visualize_ignored
@@ -98,6 +100,8 @@ class OnlineHomomorphismGDict:
             if reward > 0:
                 reward_blocks[reward].append((state, action, reward, next_state, done))
             else:
+
+                # evaluate the state under a sample of actions
                 sampled_actions = self.sample_actions(state)
                 blocks = set()
 
@@ -112,7 +116,15 @@ class OnlineHomomorphismGDict:
 
                     blocks.add(block)
 
-                if np.min(probs) >= self.b_min_conf:
+                # check if the system if confident enough about the state
+                if self.percentile is not None:
+                    val = np.percentile(probs, self.percentile)
+                    include = val >= self.conf_threshold
+                else:
+                    include = np.min(probs) >= self.conf_threshold
+
+                # either put the state into its state block or ignore it
+                if include:
                     key = frozenset(blocks)
                     new_blocks[key].append((state, action, reward, next_state, done))
                 else:
