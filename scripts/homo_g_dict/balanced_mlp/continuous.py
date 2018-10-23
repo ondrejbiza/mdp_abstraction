@@ -3,6 +3,7 @@ import os
 import copy as cp
 import numpy as np
 import matplotlib.pyplot as plt
+plt.style.use("seaborn-colorblind")
 from algorithms.online_homomorphism_g_dict import OnlineHomomorphismGDict
 import model_utils
 import vis_utils
@@ -67,7 +68,8 @@ def main(args):
 
     experience = gather_experience(env, args.num_experience)
     homo = OnlineHomomorphismGDict(experience, g, sample_actions, args.b_threshold,
-                                   OnlineHomomorphismGDict.RESOLVE_ADD_CLOSEST, 20, visualize_b=visualize_b)
+                                   OnlineHomomorphismGDict.RESOLVE_ADD_CLOSEST, 20, visualize_b=visualize_b,
+                                   visualize_conf=vis_utils.show_confidences)
     homo.partition_iteration()
 
 

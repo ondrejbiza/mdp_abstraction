@@ -120,6 +120,23 @@ class BalancedMLP:
             logits = logits[0]
             return np.argmax(logits)
 
+    def predict_prob(self, state, action):
+        """
+        Predict probabilities of state-action blocks given a state-action pair.
+        :param state:       State.
+        :param action:      Action.
+        :return:            Probability distribution over all state-action blocks.
+        """
+
+        if self.single_class:
+            return [1]
+        else:
+            predictions = self.session.run(self.predictions, feed_dict={
+                self.states_pl: [state],
+                self.actions_pl: [action]
+            })
+            return predictions
+
     def batch_predict(self, states, actions):
         """
         Predict into which block a batch of state-action pairs belong.
@@ -136,6 +153,23 @@ class BalancedMLP:
                 self.actions_pl: actions
             })
             return np.argmax(logits, axis=1)
+
+    def batch_predict_prob(self, states, actions):
+        """
+        Predict probabilities of state-action blocks for a batch of state-action pairs.
+        :param states:      States.
+        :param actions:     Actions.
+        :return:            Batch of state-action block distributions.
+        """
+
+        if self.single_class:
+            return [1] * len(states)
+        else:
+            predictions = self.session.run(self.predictions, feed_dict={
+                self.states_pl: states,
+                self.actions_pl: actions
+            })
+            return predictions
 
     def fit(self, state_action_partition):
         """
@@ -226,6 +260,7 @@ class BalancedMLP:
         with tf.variable_scope("logits"):
             self.logits = tf.layers.dense(x, num_classes, kernel_initializer=get_mrsa_initializer(),
                                           kernel_regularizer=get_weight_regularizer(self.weight_decay))
+            self.predictions = tf.nn.softmax(self.logits, axis=-1)
 
     def __build_training(self):
         """

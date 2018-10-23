@@ -11,7 +11,8 @@ class OnlineHomomorphismGDict:
     RESOLVE_ADD_TO_RANDOM = 3
 
     def __init__(self, experience, classifier, sample_actions, b_size_threshold,
-                 outlier_resolution, max_partition_iteration_steps, visualize_b=None):
+                 outlier_resolution, max_partition_iteration_steps, visualize_b=None,
+                 visualize_conf=None):
 
         self.partition = {frozenset(experience)}
         self.classifier = classifier
@@ -21,6 +22,7 @@ class OnlineHomomorphismGDict:
         self.outlier_resolution = outlier_resolution
         self.max_partition_iteration_steps = max_partition_iteration_steps
         self.visualize_b = visualize_b
+        self.visualize_conf = visualize_conf
 
         self.ignored = set()
 
@@ -48,6 +50,9 @@ class OnlineHomomorphismGDict:
                 print("step {:d} state-action partition:".format(step))
                 self.visualize_b(self.partition)
 
+            if self.visualize_conf is not None:
+                self.visualize_conf(self.partition, self.classifier, self.sample_actions)
+
         return step
 
     def __partition_improvement(self):
@@ -73,12 +78,8 @@ class OnlineHomomorphismGDict:
         reward_blocks = collections.defaultdict(list)
 
         # get all experience
-        experience = []
-        for block in self.partition:
-            experience += list(block)
-        if len(self.ignored) > 0:
-            experience += list(self.ignored)
-            self.ignored = set()
+        experience = self.__get_all_experience(include_ignored=True)
+        self.ignored = set()
 
         # split experience based on next state blocks
         for state, action, reward, next_state, done in experience:
@@ -201,3 +202,20 @@ class OnlineHomomorphismGDict:
         """
 
         self.classifier.fit(self.partition)
+
+    def __get_all_experience(self, include_ignored=True):
+        """
+        Get all experience.
+        :param include_ignored:     Include ignored experience.
+        :return:                    List with all transitions.
+        """
+
+        experience = []
+        for block in self.partition:
+            experience += list(block)
+
+        if include_ignored:
+            if len(self.ignored) > 0:
+                experience += list(self.ignored)
+
+        return experience
