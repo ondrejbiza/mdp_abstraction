@@ -5,7 +5,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 LOAD_DIR = "results/homo_g_dict_conf/balanced_mlp"
-LOAD_FILE = "experiment_1_thresholds_25th_percentile.pickle"
+LOAD_FILE = "experiment_1_thresholds_25th_percentile_exclude.pickle"
 LOAD_PATH = os.path.join(LOAD_DIR, LOAD_FILE)
 
 NUM_RUNS = 200

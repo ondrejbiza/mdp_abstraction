@@ -10,9 +10,9 @@ NUM_RUNS = 200
 NUM_EXPERIENCE_LIST = [200, 500, 1000]
 SPLIT_THRESHOLD_LIST = [10, 20, 50]
 CONF_THRESHOLD_LIST = [0.0, 0.5, 0.7, 0.8, 0.85, 0.9]
-PERCENTILE = 12
+PERCENTILE = 25
 SAVE_DIR = "results/homo_g_dict_conf/balanced_mlp"
-SAVE_FILE = "experiment_1_thresholds_12th_percentile.pickle"
+SAVE_FILE = "experiment_1_thresholds_25th_percentile_exclude.pickle"
 SAVE_PATH = os.path.join(SAVE_DIR, SAVE_FILE)
 
 
@@ -54,7 +54,8 @@ def run(num_experience, split_threshold, min_confidence):
 
     experience = gather_experience(env, num_experience)
     homo = OnlineHomomorphismGDict(experience, g, sample_actions, split_threshold, min_confidence,
-                                   OnlineHomomorphismGDict.RESOLVE_IGNORE, 20, percentile=PERCENTILE)
+                                   OnlineHomomorphismGDict.RESOLVE_IGNORE, 20, percentile=PERCENTILE,
+                                   exclude_blocks=True)
     homo.partition_iteration()
 
     hits, total = evaluation.overlap(env, list(homo.partition))
