@@ -135,10 +135,11 @@ def show_confidences(state_action_partition, classifier, sample_actions, show=Tr
     y_min = int(np.floor(np.min(ys)))
     y_max = int(np.ceil(np.max(ys)))
 
-    grid_x, grid_y = np.mgrid[x_min:x_max:100j, y_min:y_max:100j]
+    grid_x, grid_y = np.mgrid[x_min:x_max:1000j, y_min:y_max:1000j]
 
     grid = griddata(np.stack([xs, ys], axis=-1), colors, (grid_x, grid_y), method="linear")
 
+    #plt.rcParams['axes.facecolor'] = "white"
     plt.figure(figsize=(14, 8))
 
     plt.imshow(grid.T, extent=(x_min, x_max, y_min, y_max), origin="lower", cmap="gray", vmin=0, vmax=1)
