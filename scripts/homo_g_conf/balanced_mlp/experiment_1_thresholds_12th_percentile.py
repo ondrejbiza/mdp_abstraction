@@ -6,7 +6,7 @@ from envs.continuous_3 import ContinuousEnv3
 from algorithms.online_homomorphism_g_conf import OnlineHomomorphismG
 import evaluation, model_utils, log_utils
 
-NUM_RUNS = 200
+NUM_RUNS = 50
 NUM_EXPERIENCE_LIST = [200, 500, 1000]
 SPLIT_THRESHOLD_LIST = [10, 20, 50]
 CONF_THRESHOLD_LIST = [0.0, 0.5, 0.7, 0.8, 0.85, 0.9]
