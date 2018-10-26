@@ -6,7 +6,8 @@ class OnlineHomomorphismG:
 
     def __init__(self, experience, classifier, sample_actions, b_size_threshold, sb_size_threshold,
                  max_partition_iteration_steps, conf_threshold, percentile=None, exclude_blocks=False,
-                 order_state_blocks=False, visualize_b=None, visualize_sb=None, visualize_conf=None):
+                 order_state_blocks=False, ignore_low_conf=False, visualize_b=None, visualize_sb=None,
+                 visualize_conf=None):
 
         self.partition = {frozenset(experience)}
         self.classifier = classifier
@@ -19,6 +20,7 @@ class OnlineHomomorphismG:
         self.percentile = percentile
         self.exclude_blocks = exclude_blocks
         self.order_state_blocks = order_state_blocks
+        self.ignore_low_conf = ignore_low_conf
 
         self.visualize_b = visualize_b
         self.visualize_sb = visualize_sb
@@ -115,9 +117,11 @@ class OnlineHomomorphismG:
                 return False
 
             key = next_state in state_block
-            new_blocks[key].append((state, action, reward, next_state, done))
 
             confidence = confidences[next_state]
+
+            if not self.ignore_low_conf or confidence >= self.conf_threshold:
+                new_blocks[key].append((state, action, reward, next_state, done))
 
             if confidence >= self.conf_threshold:
                 new_blocks_counts[key] += 1
