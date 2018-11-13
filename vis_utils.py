@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.interpolate import griddata
 
 
 def plot_background(env, show=True):
@@ -84,6 +85,71 @@ def plot_decision_boundary(classifier, height, width, show=True):
     z = classifier.batch_predict(data[:, 0], data[:, 1])
     z = np.array(z).reshape(xx.shape)
     plt.contourf(xx, yy, z, alpha=0.4)
+
+    if show:
+        plt.show()
+
+
+def show_confidences(state_action_partition, classifier, sample_actions, show=True):
+    """
+    Show confidences together with real data points as an linearly interpolated image.
+    :param state_action_partition:  State-action partition.
+    :param classifier:              State-action classifier.
+    :param sample_actions:          Function that samples actions given a state.
+    :param show:                    Show plot.
+    :return:                        None.
+    """
+
+    xs = []
+    ys = []
+    colors = []
+
+    real_points = []
+    real_colors = []
+
+    for idx, block in enumerate(state_action_partition):
+        for transition in block:
+
+            real_points.append([transition[0], transition[1]])
+            real_colors.append(idx)
+
+            state = transition[3]
+            actions = sample_actions(state)
+
+            probs = classifier.batch_predict_prob([state] * len(actions), actions)
+
+            for i in range(len(probs)):
+                xs.append(state)
+                ys.append(actions[i])
+                colors.append(probs[i][np.argmax(probs[i])])
+
+    real_points = np.array(real_points, dtype=np.float32)
+    real_colors = np.array(real_colors, dtype=np.float32)
+
+    xs = np.array(xs, dtype=np.float32)
+    ys = np.array(ys, dtype=np.float32)
+    colors = np.array(colors, dtype=np.float32)
+
+    x_min = int(np.floor(np.min(xs)))
+    x_max = int(np.ceil(np.max(xs)))
+    y_min = int(np.floor(np.min(ys)))
+    y_max = int(np.ceil(np.max(ys)))
+
+    grid_x, grid_y = np.mgrid[x_min:x_max:1000j, y_min:y_max:1000j]
+
+    grid = griddata(np.stack([xs, ys], axis=-1), colors, (grid_x, grid_y), method="linear")
+
+    #plt.rcParams['axes.facecolor'] = "white"
+    plt.figure(figsize=(14, 8))
+
+    plt.imshow(grid.T, extent=(x_min, x_max, y_min, y_max), origin="lower", cmap="gray", vmin=0, vmax=1)
+    cbar = plt.colorbar()
+    cbar.set_label("confidence")
+
+    plt.scatter(real_points[:, 0], real_points[:, 1], c=real_colors)
+
+    plt.xlabel("states")
+    plt.ylabel("actions")
 
     if show:
         plt.show()

@@ -4,7 +4,7 @@ import copy as cp
 import numpy as np
 import matplotlib.pyplot as plt
 plt.style.use("seaborn-colorblind")
-from algorithms.online_homomorphism_g_dict import OnlineHomomorphismGDict
+from algorithms.online_homomorphism_g_dict_conf import OnlineHomomorphismGDict
 import model_utils
 import vis_utils
 
@@ -66,10 +66,18 @@ def main(args):
 
         vis_utils.plot_state_action_partition(state_action_partition, show=True)
 
+    def visualize_ignored(states):
+
+        vis_utils.plot_background(env, show=False)
+
+        plt.hist(states, bins=10, range=[0, len(env.STATE_MAP)], normed=True)
+        plt.show()
+
     experience = gather_experience(env, args.num_experience)
-    homo = OnlineHomomorphismGDict(experience, g, sample_actions, args.b_threshold,
-                                   OnlineHomomorphismGDict.RESOLVE_ADD_CLOSEST, 20, visualize_b=visualize_b,
-                                   visualize_conf=vis_utils.show_confidences)
+    homo = OnlineHomomorphismGDict(experience, g, sample_actions, args.b_threshold, args.conf_threshold,
+                                   OnlineHomomorphismGDict.RESOLVE_ADD_CLOSEST, 20, percentile=args.percentile,
+                                   visualize_b=visualize_b, visualize_conf=vis_utils.show_confidences,
+                                   visualize_ignored=visualize_ignored)
     homo.partition_iteration()
 
 
@@ -78,8 +86,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("environment", type=int, help="1, 2 or 3; increasing in difficulty")
 
-    parser.add_argument("--num-experience", type=int, default=400)
-    parser.add_argument("--b-threshold", type=int, default=50)
+    parser.add_argument("--num-experience", type=int, default=400, help="number of experience to collect")
+    parser.add_argument("--b-threshold", type=int, default=50, help="hard threshold on the state-action block size")
+    parser.add_argument("--conf-threshold", type=float, default=0.0, help="confidence threshold")
+    parser.add_argument("--percentile", type=int, default=None, help="what percentile of confidences to threshold; "
+                                                                     "if None, threshold the minimum confidence")
 
     parsed = parser.parse_args()
     main(parsed)

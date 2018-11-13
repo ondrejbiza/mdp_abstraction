@@ -1,5 +1,6 @@
 import collections
 import random
+import numpy as np
 import algorithms.utils as utils
 
 
@@ -10,19 +11,24 @@ class OnlineHomomorphismGDict:
     RESOLVE_ADD_TO_BIGGEST = 2
     RESOLVE_ADD_TO_RANDOM = 3
 
-    def __init__(self, experience, classifier, sample_actions, b_size_threshold,
-                 outlier_resolution, max_partition_iteration_steps, visualize_b=None,
-                 visualize_conf=None):
+    def __init__(self, experience, classifier, sample_actions, b_size_threshold, conf_threshold,
+                 outlier_resolution, max_partition_iteration_steps, percentile=None, exclude_blocks=False,
+                 visualize_b=None, visualize_conf=None, visualize_ignored=None):
 
         self.partition = {frozenset(experience)}
         self.classifier = classifier
         self.sample_actions = sample_actions
 
         self.b_size_threshold = b_size_threshold
+        self.conf_threshold = conf_threshold
         self.outlier_resolution = outlier_resolution
         self.max_partition_iteration_steps = max_partition_iteration_steps
+        self.percentile = percentile
+        self.exclude_blocks = exclude_blocks
+
         self.visualize_b = visualize_b
         self.visualize_conf = visualize_conf
+        self.visualize_ignored = visualize_ignored
 
         self.ignored = set()
 
@@ -64,6 +70,13 @@ class OnlineHomomorphismGDict:
         change = self.__split()
 
         if change:
+
+            if self.visualize_ignored is not None:
+                next_states = []
+                for transition in self.ignored:
+                    next_states.append(transition[3])
+                self.visualize_ignored(next_states)
+
             self.__train_classifier()
 
         return change
@@ -87,15 +100,38 @@ class OnlineHomomorphismGDict:
             if reward > 0:
                 reward_blocks[reward].append((state, action, reward, next_state, done))
             else:
+
+                # evaluate the state under a sample of actions
                 sampled_actions = self.sample_actions(state)
                 blocks = set()
 
+                probs = []
+
                 for sampled_action in sampled_actions:
-                    blocks.add(self.classifier.predict(next_state, sampled_action))
 
-                key = frozenset(blocks)
+                    # predict a block for the state-action pair
+                    prediction = self.classifier.predict_prob(next_state, sampled_action)[0]
+                    block = np.argmax(prediction)
+                    prob = prediction[block]
+                    probs.append(prob)
 
-                new_blocks[key].append((state, action, reward, next_state, done))
+                    # add the block, but only under some conditions
+                    if not self.exclude_blocks or prob >= self.conf_threshold:
+                        blocks.add(block)
+
+                # check if the system if confident enough about the state
+                if self.percentile is not None:
+                    val = np.percentile(probs, self.percentile)
+                    include = val >= self.conf_threshold
+                else:
+                    include = np.min(probs) >= self.conf_threshold
+
+                # either put the state into its state block or ignore it
+                if include and len(blocks) > 0:
+                    key = frozenset(blocks)
+                    new_blocks[key].append((state, action, reward, next_state, done))
+                else:
+                    self.ignored.add((state, action, reward, next_state, done))
 
         # resolve outlier state blocks
         if self.b_size_threshold > 1:
