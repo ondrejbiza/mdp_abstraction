@@ -92,13 +92,18 @@ class StairEnv:
 
         ind = argmax(self.state[0])
 
-        # terminate = False
-        # i = 1
-        # while terminate:
-        #     left_valid = True if (self.state[ind - i])
-        #
-        # left_valid = self.state[i - 1]
-        # right_valid = self.state[i + 1]
+        is_stair = True
+        # Loop through elements after argmax
+        for i in range(ind, len(self.state[0]-1):
+            if (self.state[0][i] != self.state[0][i+1] - 1):
+                is_stair = False
+                break
+
+        # Loop through elements before argmax
+        for i in reversed(1, range(ind)):
+            if (self.state[0][i] != self.state[0][i-1] - 1):
+                is_stair = False
+                break
 
         return False
 
