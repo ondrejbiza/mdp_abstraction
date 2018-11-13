@@ -25,10 +25,10 @@ class Polyomino:
 class StairEnv:
 
     # Define fixed vars
-    HAND_EMPTY = 0
-    HAND_FULL = 1
+    HAND_EMPTY = False
+    HAND_FULL = True
 
-    def __init__(self, env_extent, num_blocks=3, polyonimo_limit=1, only_horizontal=True, hall_length=3):
+    def __init__(self, env_extent, num_blocks=3, initial_state=np.array([])):
 
         """
         Create a staircase environment different sized blocks.
@@ -43,22 +43,23 @@ class StairEnv:
         """
 
         self.num_blocks = num_blocks
-        self.polyonimo_limit = polyonimo_limit
-        self.only_horizontal = only_horizontal
         self.env_extent= env_extent
 
-        self.state = [np.zeros(env_extent), StairEnv.HAND_EMPTY]
-
-        self.reset()
+        if (len(initial_state) > 1):
+            assert initial_state[0].size == env_extent
+            self.state = initial_state
+        else:
+            self.reset()
 
     def reset(self):
+
+        # Clear the array first
+        self.state = [np.zeros(self.env_extent), self.HAND_EMPTY]
 
         # For single blocks, randomly places them in the env
         for _ in range(self.num_blocks):
             i = np.random.choice(self.env_extent)
             self.state[0][i] += 1
-
-        self.state[1] = self.HAND_EMPTY
 
     def step(self, action):
         '''
@@ -67,13 +68,18 @@ class StairEnv:
 
         # If holding block, then drop it at desired location
         if self.state[1]:
-            next_state = self.state[0][action] + 1
-            self.state[1] = self.HAND_EMPTY
+            self.state[0][action] += 1; self.state[1] = self.HAND_EMPTY
 
         # If not holding block, then pick it up at the desired index
         else:
-            next_state = self.state[0][action] - 1 if (self.state > 0) else 0
-            self.state[1] = self.HAND_FULL
+
+            # Check there are actually blocks to grab
+            if (self.state[0][action] > 0):
+                self.state[0][action] -= 1; self.state[1] = self.HAND_FULL
+
+            # Or do nothing
+            else:
+                self.state[1] = self.HAND_EMPTY
 
         # Check if staircase to recieve reward
         if (self.is_stairs()):
@@ -84,28 +90,27 @@ class StairEnv:
             reward = 0
             done = False
 
-        self.state = next_state
-
-        return reward, next_state, done
+        return reward, self.state, done
 
     def is_stairs(self):
 
-        ind = argmax(self.state[0])
+        ind = np.argmax(self.state[0])
 
-        is_stair = True
         # Loop through elements after argmax
-        for i in range(ind, len(self.state[0]-1):
+        right_stair = True
+        for i in range(ind + 1, self.state[0].size-1):
             if (self.state[0][i] != self.state[0][i+1] - 1):
-                is_stair = False
+                right_stair = False
                 break
 
         # Loop through elements before argmax
-        for i in reversed(1, range(ind)):
+        left_stair = True
+        for i in reversed(range(1, ind)):
             if (self.state[0][i] != self.state[0][i-1] - 1):
-                is_stair = False
+                left_stair = False
                 break
 
-        return False
+        return right_stair or left_stair
 
     def show(self):
 
