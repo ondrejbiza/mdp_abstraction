@@ -35,8 +35,8 @@ class TestStair(unittest.TestCase):
         env = StairEnv(env_extent, num_blocks=1, initial_state=[np.array([1,0]), False])
 
         # Move block to other Location
-        env.step(0)
-        env.step(1)
+        env.step(2) # pick up block at 0
+        env.step(1) # drop block at 1
 
         np.testing.assert_array_equal(env.state[0], np.array([0,1]))
         self.assertEqual(env.state[1], False)

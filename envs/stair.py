@@ -38,12 +38,12 @@ class StairEnv:
 
         :parma env_extent           Length of the environment to place blocks
         :param num_blocks:          Number of blocks in the environment.
-        :param polyonimo_limit      Max polyonimo size to be generated.
-        :param only_horizontal      Whether or not to allow rotations of polyomino
+        :initial_state              Allows specification of initial env
         """
 
         self.num_blocks = num_blocks
-        self.env_extent= env_extent
+        self.env_extent = env_extent
+        self.num_actions = 2*env_extent - 1
 
         if (len(initial_state) > 1):
             assert initial_state[0].size == env_extent
@@ -65,17 +65,24 @@ class StairEnv:
         '''
         :param      action: index of location to pick or place
         '''
+        assert (action > -1) and (action <= self.num_actions)
 
-        # If holding block, then drop it at desired location
-        if self.state[1]:
-            self.state[0][action] += 1; self.state[1] = self.HAND_EMPTY
+        # Drop Block
+        if action < self.env_extent:
+            place_action = action
 
-        # If not holding block, then pick it up at the desired index
-        else:
+            # Check if hand full, otherwise nothing happens
+            if self.state[1]:
+                self.state[0][action] += 1; self.state[1] = self.HAND_EMPTY
 
-            # Check there are actually blocks to grab
-            if (self.state[0][action] > 0):
-                self.state[0][action] -= 1; self.state[1] = self.HAND_FULL
+
+        # Pick Up Block
+        elif action < 2*self.env_extent:
+            pick_action = action - self.env_extent
+
+            # Check that hand is free and there are blocks to grab
+            if (not self.state[1] and self.state[0][pick_action] > 0):
+                self.state[0][pick_action] -= 1; self.state[1] = self.HAND_FULL
 
             # Or do nothing
             else:
